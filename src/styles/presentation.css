@@ -1,0 +1,367 @@
+.mission-expand-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+.mission-expand-bar > span {
+  font: 7px monospace;
+  letter-spacing: 1px;
+  color: #7892a1;
+}
+.expand-mission {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 15px;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: inherit;
+  font-size: 11px;
+}
+.expand-mission:hover {
+  border-color: #36aeb3;
+  background: #36aeb310;
+}
+.mission-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  max-width: none;
+  width: 100%;
+  height: 100dvh;
+  overflow: auto;
+  background: #f7f8f4;
+  padding: 28px 4% 60px;
+  overscroll-behavior: contain;
+}
+.mission-expanded .mission-expand-bar {
+  position: sticky;
+  top: -28px;
+  z-index: 4;
+  background: inherit;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.mission-expanded > .section-kicker,
+.mission-expanded > .section-heading,
+.mission-expanded > .project-status {
+  display: none;
+}
+.mission-expanded .mission-workspace {
+  max-width: 1600px;
+  margin: auto;
+}
+.mission-expanded .mission-flow {
+  max-width: 1600px;
+  margin: 0 auto 20px;
+}
+.mission-expanded .mission-main {
+  align-self: start;
+}
+.mission-expanded .mission-side {
+  padding: 24px;
+}
+.mission-expanded .mission-side h3 {
+  font-size: 22px;
+}
+.mission-expanded .mission-mini-map svg {
+  height: 70px;
+}
+[data-theme="dark"] .mission-expanded {
+  background: #050a12;
+}
+.print-plan-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 10px;
+  margin-top: 15px;
+  background: none;
+  color: inherit;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  width: 100%;
+  font-size: 11px;
+}
+.print-plan-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.print-plan-dialog {
+  width: min(900px, 95vw);
+  max-height: 92dvh;
+  padding: 0;
+  border: 1px solid #c7d3d9;
+  border-radius: 12px;
+  background: #e8eff3;
+  color: #183c4b;
+  box-shadow: 0 30px 100px #0005;
+}
+.print-plan-dialog::backdrop {
+  background: #020c18b8;
+  backdrop-filter: blur(8px);
+}
+.print-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  background: #f3f7f8;
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid #d5e0e4;
+  z-index: 2;
+}
+.print-toolbar > span {
+  font-size: 11px;
+  margin-right: auto;
+}
+.print-toolbar button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #cadbe0;
+  border-radius: 5px;
+  background: #fff;
+  padding: 10px;
+  color: #214858;
+  font-size: 11px;
+}
+.plan-paper {
+  background: white;
+  margin: 24px;
+  padding: 42px;
+  color: #183c4b;
+  font-family: Arial, sans-serif;
+}
+.paper-brand {
+  font-size: 25px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 2px solid #237e88;
+  padding-bottom: 20px;
+}
+.paper-brand span {
+  font-size: 8px;
+  letter-spacing: 1px;
+  font-weight: 400;
+}
+.plan-paper h1 {
+  font-size: 32px;
+  letter-spacing: -1px;
+  margin: 28px 0 18px;
+  line-height: 1.2;
+}
+.paper-warning {
+  background: #f1f6f7;
+  border-left: 3px solid #43899a;
+  padding: 13px;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.paper-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 25px 0;
+}
+.paper-details dt {
+  font-size: 10px;
+  color: #6c828e;
+  margin-bottom: 7px;
+}
+.paper-details dd {
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.6;
+}
+.paper-totals {
+  display: flex;
+  gap: 25px;
+  padding: 17px 0;
+  border-top: 1px solid #dae3e8;
+  border-bottom: 1px solid #dae3e8;
+  font-size: 11px;
+}
+.paper-totals b {
+  font-size: 20px;
+  margin-right: 5px;
+  font-weight: 500;
+}
+.plan-paper h2 {
+  font-size: 19px;
+  letter-spacing: 0;
+  margin: 27px 0 15px;
+  font-weight: 500;
+}
+.paper-reach {
+  break-inside: avoid;
+  border: 1px solid #dce4e8;
+  border-radius: 5px;
+  padding: 17px;
+  margin-bottom: 14px;
+}
+.paper-reach h3 {
+  font-size: 14px;
+  letter-spacing: 0;
+  margin: 0 0 10px;
+}
+.paper-reach p {
+  font-size: 11px;
+  margin: 8px 0;
+  line-height: 1.7;
+}
+.paper-note {
+  font-size: 11px;
+  border-top: 1px solid #e0e8ec;
+  padding-top: 10px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.paper-checklist {
+  font-size: 11px;
+  padding-left: 18px;
+  line-height: 2;
+}
+.plan-paper footer {
+  font-size: 9px;
+  color: #6c828e;
+  line-height: 1.8;
+  margin-top: 25px;
+  padding: 17px 0 0;
+  border-top: 1px solid #dce4e8;
+}
+.plan-paper h1,
+.plan-paper h2,
+.plan-paper h3,
+.plan-paper p {
+  color: #183c4b !important;
+}
+[data-theme="dark"] .print-plan-dialog {
+  color-scheme: light;
+}
+.print-plan-dialog input,
+.print-plan-dialog button {
+  color-scheme: light;
+}
+@media (max-width: 700px) {
+  .mission-expand-bar > span {
+    display: none;
+  }
+  .mission-expand-bar {
+    justify-content: flex-end;
+  }
+  .expand-mission {
+    font-size: 10px;
+  }
+  .mission-expanded {
+    padding: 12px 4% 35px;
+  }
+  .mission-expanded .mission-expand-bar {
+    top: -12px;
+  }
+  .print-toolbar {
+    padding: 10px;
+    gap: 8px;
+  }
+  .print-toolbar > span {
+    display: none;
+  }
+  .print-toolbar button:first-of-type {
+    margin-right: auto;
+    font-size: 10px;
+  }
+  .plan-paper {
+    margin: 10px;
+    padding: 22px;
+  }
+  .paper-brand {
+    font-size: 21px;
+  }
+  .paper-brand span {
+    font-size: 6px;
+  }
+  .paper-totals {
+    gap: 12px;
+    font-size: 9px;
+  }
+  .paper-totals b {
+    font-size: 16px;
+  }
+  .paper-details {
+    gap: 17px 12px;
+  }
+  .print-plan-button {
+    font-size: 12px;
+  }
+}
+@page {
+  size: A4;
+  margin: 15mm;
+}
+@media print {
+  html,
+  body {
+    background: white !important;
+    color: #183c4b !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body > *:not(.print-plan-host) {
+    display: none !important;
+  }
+  .print-plan-host {
+    display: block !important;
+  }
+  .print-plan-dialog {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+  .print-plan-dialog::backdrop,
+  .print-toolbar {
+    display: none !important;
+  }
+  .plan-paper {
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  .paper-reach {
+    break-inside: avoid;
+  }
+  .paper-brand,
+  .paper-details,
+  .paper-totals {
+    break-inside: avoid;
+  }
+  .plan-paper h2,
+  .plan-paper h3 {
+    break-after: avoid;
+  }
+  .plan-paper footer {
+    break-inside: avoid;
+  }
+  .plan-paper * {
+    color: #183c4b !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,1 +1,27 @@
-<!doctype html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#f6f8f4"/><meta name="description" content="RIVER — автоматизированное обнаружение и картографирование древесных завалов на реках по видео с беспилотников."/><title>RIVER — видеть реку целиком</title></head><body><script>try{document.documentElement.dataset.theme=localStorage.getItem('river-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch{}</script><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f8f4" />
+    <meta
+      name="description"
+      content="RIVER — автоматизированное обнаружение и картографирование древесных завалов на реках по видео с беспилотников."
+    />
+    <title>RIVER — видеть реку целиком</title>
+  </head>
+  <body>
+    <script>
+      try {
+        const saved = localStorage.getItem("river-theme");
+        document.documentElement.dataset.theme =
+          (["light", "dark"].includes(saved) ? saved : null) ||
+          (matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light");
+      } catch {}
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

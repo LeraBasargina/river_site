@@ -7,14 +7,17 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "offline": "npm run build && python3 scripts/package-offline.py"
+    "offline": "npm run build && python3 scripts/package-offline.py",
+    "test": "node tests/plan-storage.test.js",
+    "test:browser": "node tests/browser-review.cjs"
   },
   "dependencies": {
+    "lucide-react": "^0.468.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "lucide-react": "^0.468.0"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "playwright": "^1.65.0",
     "vite": "^7.2.0"
   }
 }
