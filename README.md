@@ -32,3 +32,7 @@ Production-сборка и браузерная проверка Chromium: пе�
 ## Видео
 
 Источник: https://github.com/LeraBasargina/AI_Center_site, коммит 3b8ad183d8b63bac9cb33181f0bf67c814d16cde. Файлы media/optimized/segment.mp4 и media/optimized/b-boxes.mp4 перекодированы локально в H.264 1280×720, CRF 26, без аудио, с faststart. Итоговые видео и постер находятся в public/media и входят в production-сборку. Воспроизведение запускает пользователь; автозагрузки полного видео нет (preload=metadata). Оригиналы репозитория не изменены.
+
+## Просмотр без установки и хостинга
+
+`npm run offline` создаёт `RIVER-local.zip`. Распакуйте архив целиком и откройте `RIVER-local/index.html` в обычном браузере. JavaScript и CSS встроены в HTML, видео загружаются из соседней папки `media`. Сервер и интернет не нужны. При запрете localStorage браузером план можно скачать JSON-файлом.
