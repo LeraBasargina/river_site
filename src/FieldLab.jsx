@@ -11,6 +11,35 @@ import {
   X,
   MousePointer2,
 } from "lucide-react";
+const photoViews = [
+  {
+    id: "overview",
+    title: "Общий план",
+    detail: "Снимок целиком",
+    scale: 1,
+    origin: "50% 50%",
+  },
+  {
+    id: "upper",
+    title: "Верхний берег",
+    detail: "Увеличенный фрагмент · ×2",
+    scale: 2,
+    origin: "50% 0%",
+  },
+  {
+    id: "lower",
+    title: "Нижний берег",
+    detail: "Увеличенный фрагмент · ×2",
+    scale: 2,
+    origin: "65% 100%",
+  },
+];
+const newSession = () => ({
+  marks: [],
+  revealed: false,
+  cursor: { x: 50, y: 50 },
+  message: "",
+});
 const frames = [
   { time: 20, x: 40.5, y: 34.5 },
   { time: 22, x: 42.2, y: 39.3 },
@@ -69,12 +98,33 @@ function FrameDialog({ frame, onClose }) {
   );
 }
 export default function FieldLab() {
-  const [marks, setMarks] = useState([]),
-    [revealed, setRevealed] = useState(false),
-    [cursor, setCursor] = useState({ x: 50, y: 50 }),
-    [message, setMessage] = useState(""),
-    [step, setStep] = useState(0),
-    [frame, setFrame] = useState(null);
+  const [activeView, setActiveView] = useState(0);
+  const [sessions, setSessions] = useState({});
+  const [step, setStep] = useState(0);
+  const [frame, setFrame] = useState(null);
+  const view = photoViews[activeView];
+  const { marks, revealed, cursor, message } =
+    sessions[view.id] || newSession();
+  function updateSession(field, value) {
+    setSessions((all) => {
+      const current = all[view.id] || newSession();
+      return {
+        ...all,
+        [view.id]: {
+          ...current,
+          [field]: typeof value === "function" ? value(current[field]) : value,
+        },
+      };
+    });
+  }
+  const setMarks = (value) => updateSession("marks", value);
+  const setRevealed = (value) => updateSession("revealed", value);
+  const setCursor = (value) => updateSession("cursor", value);
+  const setMessage = (value) => updateSession("message", value);
+  const photoStyle = {
+    transform: `scale(${view.scale})`,
+    transformOrigin: view.origin,
+  };
   const image = useRef(null);
   function add(x, y) {
     if (revealed) return;
@@ -109,16 +159,55 @@ export default function FieldLab() {
           Какие места вы бы проверили внимательнее?
         </p>
       </div>
+      <div
+        className="spotter-gallery"
+        role="group"
+        aria-label="Выбор снимка для поиска завалов"
+      >
+        {photoViews.map((sample, i) => (
+          <button
+            key={sample.id}
+            className={i === activeView ? "active" : ""}
+            aria-pressed={i === activeView}
+            onClick={() => setActiveView(i)}
+          >
+            <span className="spotter-thumb">
+              <img
+                src="/media/survey-original.jpg"
+                alt=""
+                style={{
+                  transform: `scale(${sample.scale})`,
+                  transformOrigin: sample.origin,
+                }}
+              />
+            </span>
+            <span>
+              <strong>{sample.title}</strong>
+              <small>{sample.detail}</small>
+            </span>
+            <span className="sample-status">
+              {sessions[sample.id]?.revealed ? "Проверено" : `0${i + 1}`}
+            </span>
+          </button>
+        ))}
+      </div>
+      <p className="spotter-gallery-note">
+        Три вида одного реального снимка: общий план и два увеличенных
+        фрагмента. Отметки и результат сохраняются для каждого вида отдельно до
+        перезагрузки страницы.
+      </p>
       <div className="spotter-panel">
         <div className="spotter-main">
           <div className="spotter-top">
             <span>
-              <i /> АЭРОСЪЁМКА / РЕАЛЬНЫЙ МАТЕРИАЛ
+              <i /> {view.title.toUpperCase()} / {activeView + 1} ИЗ{" "}
+              {photoViews.length}
             </span>
             <span>{revealed ? "РЕЗУЛЬТАТ ОТКРЫТ" : "ВАША ОЧЕРЕДЬ"}</span>
           </div>
           <div
             ref={image}
+            key={view.id}
             className={"spotter-image " + (revealed ? "is-revealed" : "")}
             role="button"
             tabIndex={revealed ? -1 : 0}
@@ -173,12 +262,14 @@ export default function FieldLab() {
           >
             <img
               src="/media/survey-original.jpg"
+              style={photoStyle}
               alt="Река с отмелью слева и древесными скоплениями у правого берега"
               draggable="false"
             />
             {revealed && (
               <img
                 className="spotter-mask"
+                style={photoStyle}
                 src="/media/survey-segmentation.jpg"
                 alt="Результат сегментации из материалов проекта"
               />
@@ -228,7 +319,7 @@ export default function FieldLab() {
           </div>
         </div>
         <aside className="spotter-side">
-          <span className="lab-kicker">01 / НАЙТИ ЗАВАЛ</span>
+          <span className="lab-kicker">01 / НАЙТИ ЗАВАЛ · {view.title}</span>
           <h3>{revealed ? "Сравните два взгляда." : "Что скрывает берег?"}</h3>
           <p>
             {revealed
