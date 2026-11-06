@@ -44,6 +44,22 @@ const fs = require("node:fs");
     "Заметка участка A"
   )
     throw Error("Draft A lost");
+  if (await p.locator(".spotter-panel,.spotter-gallery").count())
+    throw Error("Removed photo exercise still present");
+  const tracking = p.locator("#tracking-demo");
+  await tracking.getByRole("tab", { name: /Связать между кадрами/ }).click();
+  if ((await tracking.locator(".tracking-frames .track-focus").count()) !== 3)
+    throw Error("Tracking highlights missing");
+  await tracking.getByRole("button", { name: "Открыть кадр 00:22" }).click();
+  await p.getByRole("dialog", { name: "Кадр 00:22" }).waitFor();
+  await p.keyboard.press("Escape");
+  await tracking
+    .getByRole("button", { name: "Следующий шаг", exact: true })
+    .click();
+  await tracking
+    .locator(".merge-output")
+    .getByText("T-01", { exact: true })
+    .waitFor();
   const broken = await p.evaluate(() =>
     [...document.querySelectorAll('a[href^="#"]')]
       .map((a) => a.getAttribute("href"))
@@ -65,7 +81,7 @@ const fs = require("node:fs");
   }
   if (errors.length) throw Error(errors.join(";"));
   console.log(
-    "PASS: corrupted stored plan recovery, invalid theme recovery, independent A/B drafts, internal links, image loading, 320/390/768/1440 layouts, no JS errors",
+    "PASS: corrupted stored plan recovery, invalid theme recovery, independent A/B drafts, removal of photo exercise, tracking steps/dialog, internal links, image loading, 320/390/768/1440 layouts, no JS errors",
   );
   await b.close();
 })().catch((e) => {

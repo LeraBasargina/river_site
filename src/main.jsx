@@ -25,11 +25,11 @@ import "./style.css";
 import "./styles/scene.css";
 import "./styles/mission.css";
 import "./styles/presentation.css";
-import "./styles/field-lab.css";
+import "./styles/tracking-demo.css";
 
 import Planner from "./Planner";
 import Mission from "./Mission";
-import FieldLab from "./FieldLab";
+import TrackingDemo from "./TrackingDemo";
 import RiverMap from "./RiverScene";
 
 const objects = [
@@ -139,7 +139,7 @@ function App() {
         <nav className={menu ? "open" : ""}>
           {[
             ["#about", "О проекте"],
-            ["#field-lab", "Попробовать"],
+            ["#tracking-demo", "Наблюдения"],
             ["#demo", "Демонстрация"],
             ["#planner", "Планирование"],
           ].map(([href, label]) => (
@@ -406,7 +406,7 @@ function App() {
             </div>
           </div>
         </section>
-        <FieldLab />
+        <TrackingDemo />
         <Mission onPlan={setPlanRequest} />
         <Planner request={planRequest} />
         <section className="results section">
