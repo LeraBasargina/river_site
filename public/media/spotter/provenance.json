@@ -1,13 +1,49 @@
 {
-  "source_repository": "LeraBasargina/AI_Center_site",
-  "source_commit": "3b8ad183d8b63bac9cb33181f0bf67c814d16cde",
-  "input_original": "media/optimized/b-boxes.mp4",
-  "input_result": "media/optimized/segment.mp4",
-  "source_resolution": [1920,1080],
-  "method": "Same timestamp and identical crop from both videos. No labels removed, no generated pixels. Visible detection annotations excluded by crop. Checked visually.",
+  "sources": {
+    "original": {
+      "url": "http://9.247.247.5/media/b-boxes.mp4",
+      "bytes": 146009699,
+      "sha256": "a0c1230511de23be59cbec5a106b3f9aa35078c3ce2bf14bcb834def6408faed"
+    },
+    "result": {
+      "url": "http://9.247.247.5/media/segment.mp4",
+      "bytes": 146060905,
+      "sha256": "2db6813db582f5a47bec98b3b769100f250fb14015be47c190fc4ded4442e3a5"
+    }
+  },
+  "source_resolution": [
+    1920,
+    1080
+  ],
+  "format": "PNG (lossless)",
+  "method": "Identical timestamp and crop from supplied full-bitrate sources. No scaling, retouching or generated pixels. Visible bbox annotations excluded by crop; visually checked. Display width limited to native crop width.",
   "samples": [
-    {"time_seconds":12,"crop_xywh":[690,510,960,540]},
-    {"time_seconds":36,"crop_xywh":[585,144,444,249]},
-    {"time_seconds":52,"crop_xywh":[975,126,615,345]}
+    {
+      "time_seconds": 12,
+      "crop_xywh": [
+        400,
+        360,
+        1400,
+        680
+      ]
+    },
+    {
+      "time_seconds": 36,
+      "crop_xywh": [
+        100,
+        130,
+        930,
+        520
+      ]
+    },
+    {
+      "time_seconds": 52,
+      "crop_xywh": [
+        850,
+        126,
+        1050,
+        340
+      ]
+    }
   ]
 }

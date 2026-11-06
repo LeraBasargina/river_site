@@ -14,12 +14,13 @@ import {
 const photoViews = [12, 36, 52].map((time) => ({
   id: `flight-${time}`,
   title: `Облёт · 00:${time}`,
-  detail: "Фрагмент видео + маски",
-  original: `/media/spotter/flight-${time}-original.jpg`,
-  result: `/media/spotter/flight-${time}-result.jpg`,
+  detail: "Оригинальное видео · PNG",
+  original: `/media/spotter/flight-${time}-original.png`,
+  result: `/media/spotter/flight-${time}-result.png`,
   scale: 1,
   origin: "50% 50%",
-  ratio: time === 12 ? "960 / 540" : time === 36 ? "444 / 249" : "615 / 345",
+  width: time === 12 ? 1400 : time === 36 ? 930 : 1050,
+  ratio: time === 12 ? "1400 / 680" : time === 36 ? "930 / 520" : "1050 / 340",
 }));
 const newSession = () => ({
   marks: [],
@@ -198,7 +199,11 @@ export default function FieldLab() {
           <div
             ref={image}
             key={view.id}
-            style={{ aspectRatio: view.ratio || "16 / 9" }}
+            style={{
+              aspectRatio: view.ratio || "16 / 9",
+              maxWidth: view.width,
+              marginInline: "auto",
+            }}
             className={"spotter-image " + (revealed ? "is-revealed" : "")}
             role="button"
             tabIndex={revealed ? -1 : 0}
