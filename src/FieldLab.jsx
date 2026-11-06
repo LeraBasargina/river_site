@@ -11,29 +11,16 @@ import {
   X,
   MousePointer2,
 } from "lucide-react";
-const photoViews = [
-  {
-    id: "overview",
-    title: "Общий план",
-    detail: "Снимок целиком",
-    scale: 1,
-    origin: "50% 50%",
-  },
-  {
-    id: "upper",
-    title: "Верхний берег",
-    detail: "Увеличенный фрагмент · ×2",
-    scale: 2,
-    origin: "50% 0%",
-  },
-  {
-    id: "lower",
-    title: "Нижний берег",
-    detail: "Увеличенный фрагмент · ×2",
-    scale: 2,
-    origin: "65% 100%",
-  },
-];
+const photoViews = [12, 36, 52].map((time) => ({
+  id: `flight-${time}`,
+  title: `Облёт · 00:${time}`,
+  detail: "Фрагмент видео + маски",
+  original: `/media/spotter/flight-${time}-original.jpg`,
+  result: `/media/spotter/flight-${time}-result.jpg`,
+  scale: 1,
+  origin: "50% 50%",
+  ratio: time === 12 ? "960 / 540" : time === 36 ? "444 / 249" : "615 / 345",
+}));
 const newSession = () => ({
   marks: [],
   revealed: false,
@@ -160,7 +147,7 @@ export default function FieldLab() {
         </p>
       </div>
       <div
-        className="spotter-gallery"
+        className="spotter-gallery video-only-gallery"
         role="group"
         aria-label="Выбор снимка для поиска завалов"
       >
@@ -173,7 +160,9 @@ export default function FieldLab() {
           >
             <span className="spotter-thumb">
               <img
-                src="/media/survey-original.jpg"
+                src={sample.original}
+                loading="lazy"
+                decoding="async"
                 alt=""
                 style={{
                   transform: `scale(${sample.scale})`,
@@ -186,15 +175,16 @@ export default function FieldLab() {
               <small>{sample.detail}</small>
             </span>
             <span className="sample-status">
-              {sessions[sample.id]?.revealed ? "Проверено" : `0${i + 1}`}
+              {sessions[sample.id]?.revealed ? "Маски открыты" : `0${i + 1}`}
             </span>
           </button>
         ))}
       </div>
       <p className="spotter-gallery-note">
-        Три вида одного реального снимка: общий план и два увеличенных
-        фрагмента. Отметки и результат сохраняются для каждого вида отдельно до
-        перезагрузки страницы.
+        Три фрагмента реального облёта: 00:12, 00:36 и 00:52. В каждом задании
+        одинаковая область синхронных кадров b-box и segment. До проверки
+        показан фрагмент без видимых рамок, после — сохранённые маски модели.
+        Отметки каждого кадра сохраняются отдельно до перезагрузки страницы.
       </p>
       <div className="spotter-panel">
         <div className="spotter-main">
@@ -208,6 +198,7 @@ export default function FieldLab() {
           <div
             ref={image}
             key={view.id}
+            style={{ aspectRatio: view.ratio || "16 / 9" }}
             className={"spotter-image " + (revealed ? "is-revealed" : "")}
             role="button"
             tabIndex={revealed ? -1 : 0}
@@ -261,16 +252,16 @@ export default function FieldLab() {
             }}
           >
             <img
-              src="/media/survey-original.jpg"
+              src={view.original}
               style={photoStyle}
-              alt="Река с отмелью слева и древесными скоплениями у правого берега"
+              alt={view.title + ": исходная аэросъёмка речного участка"}
               draggable="false"
             />
-            {revealed && (
+            {revealed && view.result && (
               <img
                 className="spotter-mask"
                 style={photoStyle}
-                src="/media/survey-segmentation.jpg"
+                src={view.result}
                 alt="Результат сегментации из материалов проекта"
               />
             )}
@@ -302,7 +293,8 @@ export default function FieldLab() {
               </span>
             )}
             <span className="photo-credit">
-              МАТЕРИАЛЫ ПРОЕКТА RIVER · AI_CENTER_SITE
+              МАТЕРИАЛЫ ПРОЕКТА RIVER ·{" "}
+              {view.id.startsWith("dji-") ? "DJI" : "AI_CENTER_SITE"}
             </span>
           </div>
           <div className="spotter-legend">
@@ -324,7 +316,9 @@ export default function FieldLab() {
           <p>
             {revealed
               ? "Синие метки — ваш выбор. Зелёные контуры — результат модели на этом кадре. Посмотрите, какие области совпали и что осталось без внимания."
-              : "Отметьте подозрительные древесные скопления. Затем откройте результат и сравните свои наблюдения с сегментацией."}
+              : view.result
+                ? "Отметьте подозрительные древесные скопления. Затем откройте результат и сравните свои наблюдения с сегментацией."
+                : "Новый исходный снимок. Отметьте подозрительные древесные скопления. Результат модели для этого кадра ещё не предоставлен."}
           </p>
           <div className="spotter-instruction">
             <MousePointer2 size={19} />
@@ -338,7 +332,9 @@ export default function FieldLab() {
             <>
               <button
                 className="button primary"
+                disabled={!view.result}
                 onClick={() => {
+                  if (!view.result) return;
                   setRevealed(true);
                   setMessage(
                     "Результат сегментации открыт. Сравните выделенные области со своими наблюдениями.",
@@ -346,9 +342,11 @@ export default function FieldLab() {
                 }}
               >
                 <Eye size={16} />{" "}
-                {marks.length
-                  ? "Показать взгляд модели"
-                  : "Посмотреть без отметок"}
+                {!view.result
+                  ? "Результат модели ожидается"
+                  : marks.length
+                    ? "Показать взгляд модели"
+                    : "Посмотреть без отметок"}
               </button>
               <button
                 className="lab-text-button"
@@ -365,6 +363,12 @@ export default function FieldLab() {
             <button className="button primary" onClick={reset}>
               <RotateCcw size={15} /> Попробовать ещё раз
             </button>
+          )}
+          {!view.result && (
+            <p className="spotter-unavailable">
+              Маски из другого снимка не накладываются. Для проверки нужен
+              результат обработки именно этого кадра.
+            </p>
           )}
           <p className="lab-feedback" role="status">
             {message}

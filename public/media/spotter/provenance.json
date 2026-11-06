@@ -1,0 +1,13 @@
+{
+  "source_repository": "LeraBasargina/AI_Center_site",
+  "source_commit": "3b8ad183d8b63bac9cb33181f0bf67c814d16cde",
+  "input_original": "media/optimized/b-boxes.mp4",
+  "input_result": "media/optimized/segment.mp4",
+  "source_resolution": [1920,1080],
+  "method": "Same timestamp and identical crop from both videos. No labels removed, no generated pixels. Visible detection annotations excluded by crop. Checked visually.",
+  "samples": [
+    {"time_seconds":12,"crop_xywh":[690,510,960,540]},
+    {"time_seconds":36,"crop_xywh":[585,144,444,249]},
+    {"time_seconds":52,"crop_xywh":[975,126,615,345]}
+  ]
+}
