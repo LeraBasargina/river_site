@@ -29,6 +29,8 @@ import "./styles/tracking-demo.css";
 
 import Planner from "./Planner";
 import Mission from "./Mission";
+import Survey from "./Survey";
+import AutoShow from "./AutoShow";
 import TrackingDemo from "./TrackingDemo";
 import RiverMap from "./RiverScene";
 
@@ -109,6 +111,11 @@ function App() {
     } catch {}
   }, [theme]);
   const [planRequest, setPlanRequest] = useState(null);
+  const [showOpen, setShowOpen] = useState(false);
+  function closeShow(returnToMap) {
+    setShowOpen(false);
+    if (returnToMap) document.getElementById("survey-map-panel")?.focus();
+  }
   const [stage, setStage] = useState(3),
     [selected, setSelected] = useState(0),
     [menu, setMenu] = useState(false),
@@ -141,6 +148,7 @@ function App() {
             ["#about", "О проекте"],
             ["#tracking-demo", "Наблюдения"],
             ["#demo", "Демонстрация"],
+            ["#survey", "Обследование"],
             ["#planner", "Планирование"],
           ].map(([href, label]) => (
             <a key={href} href={href} onClick={() => setMenu(false)}>
@@ -408,7 +416,9 @@ function App() {
         </section>
         <TrackingDemo />
         <Mission onPlan={setPlanRequest} />
+        <Survey onShow={() => setShowOpen(true)} />
         <Planner request={planRequest} />
+        {showOpen && <AutoShow onClose={closeShow} />}
         <section className="results section">
           <div className="section-kicker">05 / РЕЗУЛЬТАТЫ ОБРАБОТКИ</div>
           <div className="section-heading">

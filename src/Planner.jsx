@@ -11,7 +11,7 @@ import {
   RotateCcw,
   Printer,
 } from "lucide-react";
-const reaches = [
+export const planningReaches = [
   {
     id: "A",
     name: "Верхний участок",
@@ -78,8 +78,8 @@ export default function Planner({ request }) {
         " добавлен из обследования. Сохраните план после выбора даты.",
     );
   }, [request]);
-  const chosen = reaches.filter((r) => selected.includes(r.id));
-  const visible = reaches.filter(
+  const chosen = planningReaches.filter((r) => selected.includes(r.id));
+  const visible = planningReaches.filter(
     (r) => filter === "Все участки" || r.priority === "Высокий",
   );
   const sum = chosen
@@ -248,7 +248,7 @@ export default function Planner({ request }) {
                 </pattern>
               </defs>
               <rect width="560" height="600" fill="url(#plan-grid)" />
-              {reaches.map((r) => (
+              {planningReaches.map((r) => (
                 <g
                   key={r.id}
                   className={
@@ -279,7 +279,7 @@ export default function Planner({ request }) {
             <div className="plan-map-label">
               РЕЧНОЙ МАРШРУТ <span>N ↑</span>
             </div>
-            {reaches.map((r) => (
+            {planningReaches.map((r) => (
               <button
                 key={r.id}
                 className={

@@ -1,0 +1,170 @@
+import React, { useState } from "react";
+import { ArrowUpRight, FileDown, MapPin, Play, Video } from "lucide-react";
+import records from "./lib/survey-data.json";
+import { showDuration } from "./lib/auto-show-timeline";
+import "./styles/survey.css";
+
+const bounds = { north: 46.784, south: 46.770, west: 142.482, east: 142.502 };
+const latitudes = [46.782, 46.778, 46.774];
+const longitudes = [142.486, 142.490, 142.494, 142.498];
+
+function position({ lat, lon }) {
+  return {
+    left: `${(100 * (lon - bounds.west)) / (bounds.east - bounds.west)}%`,
+    top: `${(100 * (bounds.north - lat)) / (bounds.north - bounds.south)}%`,
+  };
+}
+
+const mapWidthMetres = (bounds.east - bounds.west) * 111320 *
+  Math.cos((Math.PI * (bounds.north + bounds.south)) / 360);
+
+export const featuredRecord = records.find(({ id }) => id === 19);
+export const surveyPhoto = (record) => `/media/survey/${record.photo}`;
+export const segmentationVideo = {
+  src: "/media/survey-segmentation.mp4",
+  poster: "/media/survey-video-poster.jpg",
+};
+export const coordinates = ({ lat, lon }) => `${lat.toFixed(7)}, ${lon.toFixed(7)}`;
+export const confidence = (record) =>
+  new Intl.NumberFormat("ru-RU", { style: "percent", maximumFractionDigits: 1 }).format(record.confidence);
+
+export function SurveyMap({ selectedId, onSelect, flight = null }) {
+  // Illustrative animation. The report has object coordinates only.
+  const start = { lat: 46.7715, lon: 142.4985 };
+  const drone = {
+    lat: start.lat + (featuredRecord.lat - start.lat) * flight,
+    lon: start.lon + (featuredRecord.lon - start.lon) * flight,
+  };
+
+  return (
+    <div className="survey-map" role="group" aria-label="Карта расчётных координат объектов отчёта">
+      {latitudes.map((lat) => (
+        <div aria-hidden="true" key={lat} className="survey-grid-lat" style={{ top: position({ lat }).top }}>
+          <span>{lat.toFixed(3)}° с. ш.</span>
+        </div>
+      ))}
+      {longitudes.map((lon) => (
+        <div aria-hidden="true" key={lon} className="survey-grid-lon" style={{ left: position({ lon }).left }}>
+          <span>{lon.toFixed(3)}°</span>
+        </div>
+      ))}
+      <div aria-hidden="true" className="survey-north">↑ <span>С</span></div>
+      <div aria-hidden="true" className="survey-scale" style={{ width: `${(100 * 200) / mapWidthMetres}%` }}>200 м</div>
+      {records.map((record) => {
+        const selected = record.id === selectedId;
+        const style = position(record);
+        const classes = `survey-pin${selected ? " is-selected" : ""}`;
+        return onSelect ? (
+          <button key={record.id} type="button" className={classes} style={style}
+            onClick={() => onSelect(record.id)} aria-label={`Объект №${record.id}`}
+            aria-pressed={selected} title={`Объект №${record.id}`}>
+            {selected ? record.id : <span aria-hidden="true" />}
+          </button>
+        ) : (
+          <span key={record.id} className={classes} style={style} aria-hidden="true">
+            {selected ? record.id : <span />}
+          </span>
+        );
+      })}
+      {flight !== null && (
+        <>
+          <svg className="survey-flight-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line x1={position(start).left} y1={position(start).top}
+              x2={position(drone).left} y2={position(drone).top} />
+          </svg>
+          <div className="survey-drone" style={position(drone)} aria-hidden="true">
+            <span className="survey-drone-body" />
+            <span className="survey-rotor top-left" />
+            <span className="survey-rotor top-right" />
+            <span className="survey-rotor bottom-left" />
+            <span className="survey-rotor bottom-right" />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function osmLink({ lat, lon }) {
+  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
+}
+
+export default function Survey({ onShow }) {
+  const [selectedId, setSelectedId] = useState(featuredRecord.id);
+  const selected = records.find(({ id }) => id === selectedId);
+  return (
+    <section id="survey" className="survey-section section" aria-labelledby="survey-title">
+      <div className="section-heading survey-heading">
+        <div>
+          <p className="survey-eyebrow">Материалы обследования · 2 июля 2025</p>
+          <h2 id="survey-title">Пример обследования</h2>
+        </div>
+        <p>22 записи из отчёта. Выберите точку на карте или строку в таблице, чтобы открыть карточку объекта.</p>
+      </div>
+      <div className="survey-actions">
+        <a href="/media/survey/client_report.xlsx" download><FileDown size={18} /> Скачать отчёт Excel</a>
+        <button type="button" onClick={onShow}><Play size={17} /> Смотреть автопоказ · {showDuration} сек.</button>
+      </div>
+
+      <details className="survey-video" onToggle={(event) => {
+        if (!event.currentTarget.open) event.currentTarget.querySelector("video").pause();
+      }}>
+        <summary><Video size={18} /> Видео с разметкой завалов · 27 сек.</summary>
+        <video src={segmentationVideo.src} poster={segmentationVideo.poster}
+          aria-label="Аэросъёмка реки с масками обнаруженных древесных завалов"
+          controls playsInline preload="none" />
+      </details>
+
+      <div className="survey-layout">
+        <div id="survey-map-panel" className="survey-map-panel" tabIndex={-1}>
+          <SurveyMap selectedId={selectedId} onSelect={setSelectedId} />
+          <p className="survey-map-caption">
+            <span><MapPin size={16} /> Расчётные координаты из отчёта</span>
+            <a href={osmLink(selected)} target="_blank" rel="noreferrer">
+              Точка на OpenStreetMap <ArrowUpRight size={15} />
+            </a>
+          </p>
+        </div>
+        <article className="survey-card" aria-label="Карточка выбранного объекта">
+          <a className="survey-photo-link" href={surveyPhoto(selected)} target="_blank" rel="noreferrer"
+            aria-label={`Открыть кадр объекта №${selected.id} в новой вкладке`}>
+            <img src={surveyPhoto(selected)} alt={`Кадр из отчёта с разметкой объекта №${selected.id}`} />
+            <ArrowUpRight size={18} />
+          </a>
+          <div className="survey-card-copy" aria-live="polite">
+            <p className="survey-eyebrow">Объект №{selected.id}</p>
+            <h3>{selected.category}</h3>
+            <dl>
+              <div><dt>Время съёмки</dt><dd>{selected.time}</dd></div>
+              <div><dt>Координаты (расчёт)</dt><dd>{coordinates(selected)}</dd></div>
+              <div><dt>Уверенность модели</dt><dd>{confidence(selected)}</dd></div>
+            </dl>
+          </div>
+        </article>
+      </div>
+      <p className="survey-note">Точки на координатной сетке построены по отчёту. Точность геопривязки в отчёте не указана. Решение о расчистке принимается отдельно после оценки участка.</p>
+
+      <div className="survey-table-scroll" tabIndex={0} role="region" aria-label="Таблица объектов обследования">
+        <table className="survey-table">
+          <caption>Объекты из отчёта</caption>
+          <thead><tr><th scope="col">ID</th><th scope="col">Класс объекта</th><th scope="col">Время съёмки</th><th scope="col">Координаты (расчёт)</th><th scope="col">Уверенность модели</th></tr></thead>
+          <tbody>
+            {records.map((record) => (
+              <tr key={record.id} className={record.id === selectedId ? "is-selected" : ""} onClick={() => setSelectedId(record.id)}>
+                <th scope="row">
+                  <button type="button" onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedId(record.id);
+                  }} aria-label={`Показать объект №${record.id} на карте`} aria-pressed={record.id === selectedId}>
+                    {record.id}
+                  </button>
+                </th>
+                <td>{record.category}</td><td>{record.time.slice(11)}</td><td>{coordinates(record)}</td><td>{confidence(record)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}

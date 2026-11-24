@@ -60,6 +60,23 @@ const fs = require("node:fs");
     .locator(".merge-output")
     .getByText("T-01", { exact: true })
     .waitFor();
+  await p.getByRole("button", { name: "Смотреть автопоказ · 90 сек." }).click();
+  const show = p.getByRole("dialog", { name: /RIVER.*AIJ-2026/ });
+  const playhead = show.getByRole("slider", { name: "Позиция автопоказа" });
+  await playhead.fill("42");
+  await show.getByRole("heading", { name: "Объект № 7" }).waitFor();
+  await playhead.fill("53");
+  await show.getByRole("heading", { name: "Объект № 19" }).waitFor();
+  await playhead.fill("65");
+  await show.getByText("Учебный пример", { exact: true }).waitFor();
+  await playhead.fill("89.7");
+  await show.getByRole("button", { name: "Воспроизвести" }).click();
+  await show.getByRole("heading", { name: "RIVER", exact: true }).waitFor();
+  await show.getByRole("button", { name: "Пауза" }).waitFor();
+  await show.getByRole("button", { name: "К карте" }).click();
+  await show.waitFor({ state: "detached" });
+  if ((await p.evaluate(() => document.activeElement.id)) !== "survey-map-panel")
+    throw Error("Autoplay did not return focus to the survey map");
   const broken = await p.evaluate(() =>
     [...document.querySelectorAll('a[href^="#"]')]
       .map((a) => a.getAttribute("href"))
@@ -81,7 +98,7 @@ const fs = require("node:fs");
   }
   if (errors.length) throw Error(errors.join(";"));
   console.log(
-    "PASS: corrupted stored plan recovery, invalid theme recovery, independent A/B drafts, removal of photo exercise, tracking steps/dialog, internal links, image loading, 320/390/768/1440 layouts, no JS errors",
+    "PASS: stored data recovery, independent drafts, tracking demo, autoplay cards/loop/map return, internal links, image loading, responsive layouts, no JS errors",
   );
   await b.close();
 })().catch((e) => {
