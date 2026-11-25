@@ -168,6 +168,23 @@ const fs = require("node:fs");
     throw Error("JSON export did not match the selected report sections");
   await p.reload();
   if (await planner.locator(".reach-card.selected").count() !== 2) throw Error("Saved survey sections did not restore");
+  const presentation = p.getByRole("dialog", { name: "Автопрезентация обследования" });
+  const watchPresentation = p.getByRole("button", { name: "Автопрезентация · 90 сек." });
+  await watchPresentation.click();
+  await presentation.waitFor();
+  await p.waitForFunction(() => {
+    const video = document.querySelector(".survey-presentation[open] video");
+    return video?.loop && Math.abs(video.duration - 90) < 0.1 && video.currentTime > 0;
+  });
+  if (await p.getByRole("region", { name: "Управление автопрезентацией" }).count())
+    throw Error("The survey video started site scrolling");
+  await presentation.getByRole("button", { name: "К карте" }).click();
+  await presentation.waitFor({ state: "hidden" });
+  await p.waitForFunction(() => document.querySelector(".survey-presentation video")?.paused);
+  await watchPresentation.click();
+  await presentation.waitFor();
+  await p.keyboard.press("Escape");
+  await presentation.waitFor({ state: "hidden" });
   await p.emulateMedia({ reducedMotion: "reduce" });
   await p.clock.install();
   await p.getByRole("button", { name: "Запустить автопрезентацию сайта" }).click();

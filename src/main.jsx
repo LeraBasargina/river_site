@@ -243,7 +243,7 @@ function App() {
             ))}
           </div>
         </section>
-        <Survey onShow={() => setShowOpen(true)} />
+        <Survey onPresentationOpen={closeShow} />
         <Mission />
         <TrackingDemo />
         <section id="results" className="results section">

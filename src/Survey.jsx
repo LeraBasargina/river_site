@@ -334,7 +334,24 @@ function SurveyWorkspace({ selectedReaches, toggleReach, addReach }) {
   );
 }
 
-export default function Survey({ onShow }) {
+export default function Survey({ onPresentationOpen }) {
+  const presentation = useRef(null);
+  const presentationVideo = useRef(null);
+  const presentationTrigger = useRef(null);
+
+  function playPresentation() {
+    onPresentationOpen();
+    presentation.current.showModal();
+    const video = presentationVideo.current;
+    video.currentTime = 0;
+    video.play().catch(() => {});
+  }
+
+  function closePresentation() {
+    presentationVideo.current.pause();
+    presentationTrigger.current.focus({ preventScroll: true });
+  }
+
   return (
     <section id="survey" className="survey-section section" aria-labelledby="survey-title">
       <div id="demo" className="section-kicker">03 / ИНТЕРАКТИВНАЯ ДЕМОНСТРАЦИЯ</div>
@@ -347,8 +364,19 @@ export default function Survey({ onShow }) {
       </div>
       <div className="survey-actions">
         <a href="#planner"><ClipboardList size={17} /> План выезда</a>
-        <button type="button" onClick={onShow}><Play size={17} /> Автопрезентация сайта</button>
+        <button type="button" ref={presentationTrigger} aria-haspopup="dialog" onClick={playPresentation}>
+          <Play size={17} /> Автопрезентация · 90 сек.
+        </button>
       </div>
+      <dialog ref={presentation} className="survey-presentation" aria-labelledby="survey-presentation-title"
+        onClose={closePresentation}>
+        <div className="survey-presentation-bar">
+          <h3 id="survey-presentation-title">Автопрезентация обследования</h3>
+          <button type="button" autoFocus onClick={() => presentation.current.close()}>К карте</button>
+        </div>
+        <video ref={presentationVideo} src="/media/RIVER-AIJ-2026.mp4" poster="/media/survey-intro-poster.jpg"
+          aria-label="90-секундное видео RIVER для AIJ-2026" controls muted playsInline loop preload="none" />
+      </dialog>
       <details id="survey-footage" className="survey-video" onToggle={(event) => {
         if (!event.currentTarget.open) event.currentTarget.querySelector("video").pause();
       }}>
