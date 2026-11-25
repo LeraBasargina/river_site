@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { ArrowUpRight, FileDown, MapPin, Play, Video } from "lucide-react";
+import { ArrowUpRight, ClipboardList, FileDown, MapPin, Play, Video } from "lucide-react";
 import records from "./lib/survey-data.json";
 import basemap from "./lib/survey-basemap.json";
 import { showDuration } from "./lib/auto-show-timeline";
 import { segmentationVideo } from "./lib/river-video";
+import { planningReaches, reachForRecord } from "./lib/survey-reaches";
 import "./styles/survey.css";
 
 const { bounds } = basemap;
@@ -52,7 +53,7 @@ export const coordinates = ({ lat, lon }) => `${lat.toFixed(7)}, ${lon.toFixed(7
 export const confidence = (record) =>
   new Intl.NumberFormat("ru-RU", { style: "percent", maximumFractionDigits: 1 }).format(record.confidence);
 
-export function SurveyMap({ selectedId, onSelect, flight = null }) {
+export function SurveyMap({ selectedId, onSelect, flight = null, selectedReachIds = [], onToggleReach }) {
   // Illustrative animation. The report has object coordinates only.
   const start = { lat: 46.7715, lon: 142.4985 };
   const drone = {
@@ -96,7 +97,8 @@ export function SurveyMap({ selectedId, onSelect, flight = null }) {
       {records.map((record) => {
         const selected = record.id === selectedId;
         const style = position(record);
-        const classes = `survey-pin${selected ? " is-selected" : ""}`;
+        const inPlan = onToggleReach && selectedReachIds.includes(reachForRecord(record.id).id);
+        const classes = `survey-pin${selected ? " is-selected" : ""}${inPlan ? " is-in-plan" : ""}`;
         return onSelect ? (
           <button key={record.id} type="button" className={classes} style={style}
             onClick={() => onSelect(record.id)} aria-label={`Объект №${record.id}`}
@@ -109,6 +111,16 @@ export function SurveyMap({ selectedId, onSelect, flight = null }) {
           </span>
         );
       })}
+      {onToggleReach && planningReaches.map((reach) => (
+        <button key={reach.id} type="button" className="survey-reach-marker"
+          style={position(records.find(({ id }) => id === reach.markerId))}
+          aria-label={`Участок ${reach.id} на карте — ${reach.name}`}
+          aria-pressed={selectedReachIds.includes(reach.id)}
+          title={reach.name}
+          onClick={() => onToggleReach(reach.id)}>
+          {reach.id}
+        </button>
+      ))}
       {flight !== null && (
         <>
           <svg className="survey-flight-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -128,9 +140,10 @@ export function SurveyMap({ selectedId, onSelect, flight = null }) {
   );
 }
 
-export default function Survey({ onShow }) {
+export default function Survey({ onShow, onPlan }) {
   const [selectedId, setSelectedId] = useState(featuredRecord.id);
   const selected = records.find(({ id }) => id === selectedId);
+  const reach = reachForRecord(selected.id);
   return (
     <section id="survey" className="survey-section section" aria-labelledby="survey-title">
       <div className="section-heading survey-heading">
@@ -176,7 +189,11 @@ export default function Survey({ onShow }) {
               <div><dt>Время съёмки</dt><dd>{selected.time}</dd></div>
               <div><dt>Координаты (расчёт)</dt><dd>{coordinates(selected)}</dd></div>
               <div><dt>Уверенность модели</dt><dd>{confidence(selected)}</dd></div>
+              <div><dt>Участок планирования</dt><dd>{reach.id} · {reach.name}</dd></div>
             </dl>
+            <button className="survey-add-to-plan" type="button" onClick={() => onPlan(reach.id)}>
+              <ClipboardList size={16} /> Участок {reach.id} в план
+            </button>
           </div>
         </article>
       </div>

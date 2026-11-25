@@ -32,15 +32,15 @@ const fs = require("node:fs");
     )
   )
     throw Error("Bad theme restored");
-  await p.getByLabel("Заметка для бригады").fill("Заметка участка A");
+  await p.getByLabel("Заметка к фрагменту").fill("Заметка участка A");
   const route = p.getByRole("group", { name: "Контрольные точки облёта" });
   await route.getByRole("button", { name: /Обзор излучины/ }).click();
-  if (await p.getByLabel("Заметка для бригады").inputValue())
+  if (await p.getByLabel("Заметка к фрагменту").inputValue())
     throw Error("Note leaked A to B");
-  await p.getByLabel("Заметка для бригады").fill("Заметка участка B");
+  await p.getByLabel("Заметка к фрагменту").fill("Заметка участка B");
   await route.getByRole("button", { name: /Начало облёта/ }).click();
   if (
-    (await p.getByLabel("Заметка для бригады").inputValue()) !==
+    (await p.getByLabel("Заметка к фрагменту").inputValue()) !==
     "Заметка участка A"
   )
     throw Error("Draft A lost");
@@ -80,6 +80,33 @@ const fs = require("node:fs");
   await surveyMap.locator(".survey-layer-buildings path").first().waitFor();
   await surveyMap.getByRole("button", { name: "Объект №22" }).click();
   await p.locator("#survey .survey-photo-link").getByAltText("Кадр из отчёта с разметкой объекта №22").waitFor();
+  await p.locator("#survey").getByRole("button", { name: "Участок C в план" }).click();
+  const planner = p.locator("#planner");
+  const northern = planner.getByRole("button", { name: /Северо-западный участок/ }).filter({ hasText: "Северо-западный участок" });
+  const southernPin = planner.getByRole("button", { name: /Участок A на карте/ });
+  if (await northern.getAttribute("aria-pressed") !== "true") throw Error("Report reach was not added");
+  await southernPin.click();
+  if (await planner.locator(".survey-pin.is-in-plan").count() !== 15) throw Error("Planning map highlights the wrong report points");
+  await planner.getByLabel("Дата выезда").fill("2026-12-01");
+  await planner.locator("summary").click();
+  await planner.getByLabel("Заметка участка C").fill("Проверить доступ к берегу");
+  await planner.getByRole("button", { name: "Сохранить план" }).click();
+  await planner.getByRole("button", { name: "План сохранён" }).waitFor();
+  await planner.getByRole("button", { name: "Печатный план / PDF" }).click();
+  const paper = p.getByRole("dialog", { name: "План выезда" });
+  await paper.getByText("8 объектов из отчёта · № 15–22").waitFor();
+  await paper.getByText("Проверить доступ к берегу").waitFor();
+  await p.keyboard.press("Escape");
+  const [download] = await Promise.all([
+    p.waitForEvent("download"),
+    planner.getByRole("button", { name: "Скачать план JSON" }).click(),
+  ]);
+  const plan = JSON.parse(fs.readFileSync(await download.path(), "utf8"));
+  if (plan.route.map((row) => row.section_id).join() !== "A,C" ||
+      plan.route[1].report_objects.map((point) => point.id).join() !== "15,16,17,18,19,20,21,22")
+    throw Error("JSON export did not match the selected report sections");
+  await p.reload();
+  if (await planner.locator(".reach-card.selected").count() !== 2) throw Error("Saved survey sections did not restore");
   await p.getByRole("button", { name: "Смотреть автопоказ · 90 сек." }).click();
   const show = p.getByRole("dialog", { name: /RIVER.*AIJ-2026/ });
   const playhead = show.getByRole("slider", { name: "Позиция автопоказа" });
@@ -118,7 +145,7 @@ const fs = require("node:fs");
   }
   if (errors.length) throw Error(errors.join(";"));
   console.log(
-    "PASS: stored data recovery, independent drafts, tracking demo, autoplay cards/loop/map return, internal links, image loading, responsive layouts, no JS errors",
+    "PASS: stored data, independent drafts, report-to-plan selection/print/JSON, autoplay, links, images, responsive layouts, no JS errors",
   );
   await b.close();
 })().catch((e) => {

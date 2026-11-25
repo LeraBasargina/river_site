@@ -112,6 +112,10 @@ function App() {
   }, [theme]);
   const [planRequest, setPlanRequest] = useState(null);
   const [showOpen, setShowOpen] = useState(false);
+  function addSurveyReach(sectionId) {
+    setPlanRequest({ sectionId });
+    requestAnimationFrame(() => document.getElementById("planner-title")?.focus());
+  }
   function closeShow(returnToMap) {
     setShowOpen(false);
     if (returnToMap) document.getElementById("survey-map-panel")?.focus();
@@ -415,8 +419,8 @@ function App() {
           </div>
         </section>
         <TrackingDemo />
-        <Mission onPlan={setPlanRequest} />
-        <Survey onShow={() => setShowOpen(true)} />
+        <Mission />
+        <Survey onShow={() => setShowOpen(true)} onPlan={addSurveyReach} />
         <Planner request={planRequest} />
         {showOpen && <AutoShow onClose={closeShow} />}
         <section className="results section">

@@ -1355,7 +1355,7 @@ header nav {
 }
 .planner-workspace {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 1.15fr;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.35fr) minmax(0, 1.05fr);
   border: 1px solid var(--line);
   border-radius: 9px;
   overflow: hidden;
@@ -1445,16 +1445,6 @@ header nav {
   font-size: 10px;
   color: #86957a;
 }
-.priority {
-  font-style: normal;
-  font-size: 8px;
-  display: inline-block;
-  margin-top: 12px;
-  color: #718557;
-}
-.priority.high {
-  color: #9a6b30;
-}
 .planner-hint {
   display: block;
   font-size: 9px;
@@ -1473,100 +1463,26 @@ header nav {
   color: #7c8e69;
 }
 .reach-map {
-  position: relative;
-  background: #e5eadb;
-  color: #687e57;
-  min-height: 540px;
-  border-left: 1px solid var(--line);
-  border-right: 1px solid var(--line);
-}
-.reach-map > svg {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  inset: 0;
-}
-.reach-shape path {
-  fill: none;
-}
-.river-bank {
-  stroke: #d0d6bd;
-  stroke-width: 80;
-}
-.river-water {
-  stroke: #9cbbb0;
-  stroke-width: 55;
-  transition: stroke 0.2s;
-}
-.river-center {
-  stroke: #e4efde;
-  stroke-width: 1.5;
-  stroke-dasharray: 6 8;
-}
-.reach-shape.selected .river-bank {
-  stroke: #bdcf92;
-}
-.reach-shape.selected .river-water {
-  stroke: #6d9a7c;
-}
-.river-hit {
-  stroke: transparent;
-  stroke-width: 85;
-  cursor: pointer;
-}
-.river-hit:focus-visible {
-  stroke: #c8e69a;
-  stroke-opacity: 0.4;
-  outline: none;
-}
-.plan-map-label {
-  position: absolute;
-  top: 20px;
-  left: 18px;
-  right: 18px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 8px;
-  letter-spacing: 1px;
-  pointer-events: none;
-}
-.reach-label {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  background: #f7f9f0;
-  border: 1px solid #b5c1a3;
-  border-radius: 5px;
-  padding: 8px 10px;
-  gap: 9px;
-  white-space: nowrap;
-  font-size: 9px;
-}
-.reach-label.selected {
-  background: #dcebba;
-  border-color: #729359;
-}
-.reach-label b {
+  min-width: 0;
   display: grid;
-  place-items: center;
-  border: 1px solid #9caf8b;
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  font-size: 9px;
-  font-weight: 500;
+  align-content: center;
+  padding: clamp(10px, 1.4vw, 18px);
+  background: #142924;
+  color: #d9e8df;
+  border-inline: 1px solid var(--line);
+}
+.reach-map .survey-map {
+  border: 1px solid #4b6b5f;
+  border-radius: 8px;
 }
 .plan-map-caption {
-  position: absolute;
-  bottom: 17px;
-  left: 18px;
-  font-size: 6px;
-  letter-spacing: 1px;
+  margin: 12px 0 0;
+  font-size: .75rem;
+  line-height: 1.4;
 }
 .plan-summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   padding-bottom: 20px;
   margin-bottom: 23px;
   border-bottom: 1px solid var(--line);
@@ -1580,6 +1496,37 @@ header nav {
 .plan-summary span {
   font-size: 8px;
   color: #839276;
+}
+.plan-observations {
+  padding: 12px;
+  margin: 0 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: .8rem;
+}
+.plan-observations summary {
+  cursor: pointer;
+}
+.plan-observations fieldset {
+  min-width: 0;
+  margin: 13px 0 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.plan-observations fieldset .field-label:last-child {
+  margin-bottom: 0;
+}
+.plan-observations textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  resize: vertical;
 }
 .route-preview {
   display: flex;
@@ -1806,46 +1753,12 @@ header nav {
   background: #b5d18e;
   color: #22351d;
 }
-[data-theme="dark"] .priority.high {
-  color: #e1b573;
-}
-[data-theme="dark"] .priority {
-  color: #acc290;
-}
 [data-theme="dark"] .field-label input,
 [data-theme="dark"] .field-label select {
   background: #233321;
   color: #d9e8ca;
   border-color: #43573a;
   color-scheme: dark;
-}
-[data-theme="dark"] .reach-map {
-  background: #233426;
-  color: #d7e6c7;
-}
-[data-theme="dark"] .river-bank {
-  stroke: #42563b;
-}
-[data-theme="dark"] .river-water {
-  stroke: #578377;
-}
-[data-theme="dark"] .reach-shape.selected .river-bank {
-  stroke: #7e9656;
-}
-[data-theme="dark"] .reach-shape.selected .river-water {
-  stroke: #78a082;
-}
-[data-theme="dark"] .reach-label {
-  background: #223a29;
-  color: #dfedcf;
-  border-color: #718b5a;
-}
-[data-theme="dark"] .reach-label.selected {
-  background: #557144;
-  color: #fff;
-}
-[data-theme="dark"] .plan-feedback {
-  color: #c3dd9c;
 }
 [data-theme="dark"] .video-frame {
   background: #223321;
@@ -1866,12 +1779,12 @@ header nav {
   .trip-form .panel-title,
   .trip-form .plan-summary,
   .trip-form .planner-hint,
-  .trip-form .plan-feedback {
+  .trip-form .plan-feedback,
+  .trip-form .plan-observations {
     grid-column: 1/-1;
   }
   .reach-map {
     border-right: 0;
-    min-height: 530px;
   }
   header {
     gap: 8px;
@@ -1919,8 +1832,6 @@ header nav {
     padding: 13px;
   }
   .reach-map {
-    height: 390px;
-    min-height: 390px;
     border-left: 0;
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
@@ -1938,9 +1849,6 @@ header nav {
   .field-label input,
   .field-label select {
     font-size: 13px;
-  }
-  .reach-label {
-    font-size: 10px;
   }
   .planner-hint {
     font-size: 10px;

@@ -362,26 +362,6 @@
   color: #7d919b;
   margin-bottom: 0;
 }
-.plan-observations {
-  padding: 13px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  margin: 0 0 16px;
-  font-size: 10px;
-}
-.plan-observations > div + div {
-  margin-top: 12px;
-}
-.plan-observations strong {
-  font-weight: 500;
-  color: #4e9297;
-}
-.plan-observations p {
-  font-size: 11px;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  margin-bottom: 0;
-}
 .mission-side textarea:focus-visible {
   outline: 2px solid #41b9bd;
   outline-offset: 3px;

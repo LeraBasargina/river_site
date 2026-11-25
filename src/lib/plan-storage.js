@@ -1,3 +1,6 @@
+import { planningReaches } from "./survey-reaches.js";
+
+export const PLAN_STORAGE_KEY = "river-field-plan:lyutoga-2025-07-02";
 export const TEAMS = ["Бригада № 1", "Бригада № 2", "Исследовательская группа"];
 export const TASKS = [
   "Обследование и оценка расчистки",
@@ -9,7 +12,7 @@ export const STATUSES = [
   "Наблюдать в динамике",
   "Передать специалисту",
 ];
-const ids = ["A", "B", "C"];
+const ids = planningReaches.map(({ id }) => id);
 export function validDate(value) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
     return false;
@@ -26,13 +29,13 @@ export function normalizePlan(value) {
     if (!item || typeof item !== "object" || Array.isArray(item)) continue;
     observations[id] = {
       note: typeof item.note === "string" ? item.note.slice(0, 600) : "",
-      status: STATUSES.includes(item.status) ? item.status : STATUSES[0],
+      status: STATUSES.includes(item.status) ? item.status : "",
     };
   }
   return {
     selected: Array.isArray(value.selected)
       ? ids.filter((id) => value.selected.includes(id))
-      : ["A"],
+      : [],
     date: validDate(value.date) ? value.date : "",
     team: TEAMS.includes(value.team) ? value.team : TEAMS[0],
     task: TASKS.includes(value.task) ? value.task : TASKS[0],
@@ -41,7 +44,11 @@ export function normalizePlan(value) {
 }
 export function readPlan(storage) {
   try {
-    return normalizePlan(JSON.parse(storage.getItem("river-field-plan")));
+    const saved = storage.getItem(PLAN_STORAGE_KEY);
+    if (saved !== null) return normalizePlan(JSON.parse(saved));
+    const previous = normalizePlan(JSON.parse(storage.getItem("river-field-plan")));
+    // The old A–C labels and notes belonged to a fictitious route.
+    return previous && { ...previous, selected: [], observations: {} };
   } catch {
     return null;
   }

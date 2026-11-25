@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Check, Maximize, Pause, Play, Waves, X } from "lucide-react";
 import { confidence, SurveyMap, surveyPhoto } from "./Survey";
-import { planningReaches } from "./Planner";
+import { planningReaches } from "./lib/survey-reaches";
 import { sceneAt, showDuration, showFadeDuration, showScenes } from "./lib/auto-show-timeline";
 import { TEAMS } from "./lib/plan-storage";
 import { segmentationVideo } from "./lib/river-video";
@@ -30,8 +30,8 @@ function ShowPlan() {
       <div className="auto-plan-card">
         <h3>План выезда</h3>
         <ul>
-          {planningReaches.slice(0, 2).map(({ id, name }) => (
-            <li key={id}><Check aria-hidden="true" size={22} /> Участок {id} · {name}</li>
+          {planningReaches.slice(0, 2).map(({ id, name, first, last }) => (
+            <li key={id}><Check aria-hidden="true" size={22} /> {id} · {name} · № {first}–{last}</li>
           ))}
         </ul>
         <dl>

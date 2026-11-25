@@ -8,24 +8,23 @@ import {
   Play,
   Pause,
   ScanLine,
-  ClipboardList,
   ChevronRight,
   Maximize2,
   Minimize2,
 } from "lucide-react";
 const checkpointDetails = [
   {
-    id: "A",
+    id: "1",
     title: "Начало облёта",
     text: "Посмотрите, как модель выделяет древесину на береговой линии.",
   },
   {
-    id: "B",
+    id: "2",
     title: "Обзор излучины",
     text: "Смена ракурса показывает, почему наблюдения нужно связывать между кадрами.",
   },
   {
-    id: "C",
+    id: "3",
     title: "Продолжение маршрута",
     text: "Оцените результат на следующих кадрах обследования.",
   },
@@ -46,7 +45,7 @@ const modes = {
 function checkpointPhoto(mode, id) {
   return `/media/checkpoint-${mode}-${id}.jpg`;
 }
-export default function Mission({ onPlan }) {
+export default function Mission() {
   const [expanded, setExpanded] = useState(false);
   const section = useRef(null);
   const [tab, setTab] = useState("compare"),
@@ -142,11 +141,10 @@ export default function Mission({ onPlan }) {
     setPlaying(false);
     setMode(m);
   }
-  function addPlan() {
+  function openSurvey() {
     setExpanded(false);
-    onPlan({ sectionId: point.id, note, status, nonce: Date.now() });
     requestAnimationFrame(() =>
-      document.getElementById("planner").scrollIntoView({
+      document.getElementById("survey").scrollIntoView({
         behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
           ? "auto"
           : "smooth",
@@ -187,7 +185,7 @@ export default function Mission({ onPlan }) {
         <p>
           Реальная съёмка и результаты модели.
           <br />
-          Исследуйте материалы и соберите учебный план выезда.
+          Исследуйте материалы съёмки и перейдите к карте обследования.
         </p>
       </div>
       <div className="mission-flow">
@@ -392,9 +390,8 @@ export default function Mission({ onPlan }) {
                 ))}
               </div>
               <p className="mission-footnote">
-                Контрольные точки — фрагменты ролика, а не уникальные завалы. Их
-                связь с участками A–C показана условно: телеметрия этого видео
-                не предоставлена.
+                Контрольные точки обозначают время в ролике. Участки карты
+                построены по координатам из отчёта обследования.
               </p>
             </div>
           ) : (
@@ -431,15 +428,14 @@ export default function Mission({ onPlan }) {
         </div>
         <aside className="mission-side">
           <div className="mission-side-kicker">
-            <MapPin size={15} /> УЧЕБНЫЙ МАРШРУТ
+            <MapPin size={15} /> ФРАГМЕНТЫ ОБЛЁТА
           </div>
           <h3>
-            От наблюдения
-            <br />к полевой проверке.
+            От видео
+            <br />к карте обследования.
           </h3>
           <p>
-            Выберите фрагмент съёмки. Добавьте связанный демонстрационный
-            участок в план.
+            Выберите фрагмент съёмки, затем откройте карту с объектами из отчёта.
           </p>
           <div className="mission-mini-map">
             <span>СХЕМА ПРОСМОТРА · НЕ ГЕОТРЕК</span>
@@ -515,22 +511,21 @@ export default function Mission({ onPlan }) {
             </select>
           </label>
           <label className="field-label">
-            Заметка для бригады
+            Заметка к фрагменту
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Что проверить на месте?"
+              placeholder="Что заметили в кадре?"
               maxLength="600"
               rows="3"
             />
           </label>
-          <button className="button primary" onClick={addPlan}>
-            <ClipboardList size={16} /> Участок {point.id} в план{" "}
+          <button className="button primary" onClick={openSurvey}>
+            <MapPin size={16} /> К карте обследования{" "}
             <ArrowUpRight size={16} />
           </button>
           <small className="mission-footnote">
-            Перенесём участок, статус и заметку в планировщик. Решение о
-            расчистке принимает специалист.
+            Участок для выезда можно выбрать из карточки объекта на карте.
           </small>
         </aside>
       </div>

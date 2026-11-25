@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import PrintPlan from "./PrintPlan";
-import { readPlan, validDate, TEAMS, TASKS } from "./lib/plan-storage.js";
+import { PLAN_STORAGE_KEY, readPlan, validDate, TEAMS, TASKS, STATUSES } from "./lib/plan-storage.js";
+import { planningReaches } from "./lib/survey-reaches";
+import { SurveyMap } from "./Survey";
+import records from "./lib/survey-data.json";
 import {
   ArrowUpRight,
   Check,
@@ -11,38 +14,6 @@ import {
   RotateCcw,
   Printer,
 } from "lucide-react";
-export const planningReaches = [
-  {
-    id: "A",
-    name: "Верхний участок",
-    km: "0,8",
-    jams: 2,
-    priority: "Высокий",
-    path: "M340 -20 C80 40 490 140 260 220",
-    x: 260,
-    y: 135,
-  },
-  {
-    id: "B",
-    name: "Излучина",
-    km: "1,2",
-    jams: 4,
-    priority: "Высокий",
-    path: "M260 220 C60 310 530 320 335 405",
-    x: 280,
-    y: 310,
-  },
-  {
-    id: "C",
-    name: "Нижний участок",
-    km: "0,6",
-    jams: 1,
-    priority: "Плановый",
-    path: "M335 405 C100 490 215 520 170 620",
-    x: 220,
-    y: 505,
-  },
-];
 export default function Planner({ request }) {
   const [printOpen, setPrintOpen] = useState(false);
   const [initial] = useState(() => {
@@ -52,25 +23,20 @@ export default function Planner({ request }) {
       return null;
     }
   });
-  const [selected, setSelected] = useState(initial?.selected || ["A"]);
+  const [selected, setSelected] = useState(initial?.selected ?? []);
   const [date, setDate] = useState(initial?.date || "");
   const [team, setTeam] = useState(initial?.team || "Бригада № 1");
   const [task, setTask] = useState(
     initial?.task || "Обследование и оценка расчистки",
   );
-  const [filter, setFilter] = useState("Все участки");
   const [observations, setObservations] = useState(initial?.observations || {});
   const [saved, setSaved] = useState(false);
   const [message, setMessage] = useState("");
   useEffect(() => {
-    if (!request || !["A", "B", "C"].includes(request.sectionId)) return;
+    if (!request || !planningReaches.some(({ id }) => id === request.sectionId)) return;
     setSelected((s) =>
       s.includes(request.sectionId) ? s : [...s, request.sectionId],
     );
-    setObservations((s) => ({
-      ...s,
-      [request.sectionId]: { note: request.note, status: request.status },
-    }));
     setSaved(false);
     setMessage(
       "Участок " +
@@ -79,13 +45,7 @@ export default function Planner({ request }) {
     );
   }, [request]);
   const chosen = planningReaches.filter((r) => selected.includes(r.id));
-  const visible = planningReaches.filter(
-    (r) => filter === "Все участки" || r.priority === "Высокий",
-  );
-  const sum = chosen
-    .reduce((s, r) => s + Number(r.km.replace(",", ".")), 0)
-    .toFixed(1)
-    .replace(".", ",");
+  const objectCount = chosen.reduce((sum, reach) => sum + reach.recordIds.length, 0);
   function change(fn) {
     fn();
     setSaved(false);
@@ -98,15 +58,21 @@ export default function Planner({ request }) {
       ),
     );
   }
+  function updateObservation(id, field, value) {
+    change(() => setObservations((observations) => ({
+      ...observations,
+      [id]: { note: "", status: "", ...observations[id], [field]: value },
+    })));
+  }
   function submit(e) {
     e.preventDefault();
     if (!chosen.length) {
-      setMessage("Выберите хотя бы один участок на схеме или в списке.");
+      setMessage("Выберите хотя бы один участок на карте или в списке.");
       return;
     }
     const plan = { selected, date, team, task, observations };
     try {
-      localStorage.setItem("river-field-plan", JSON.stringify(plan));
+      localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(plan));
       setSaved(true);
       setMessage("План сохранён в этом браузере.");
     } catch {
@@ -117,17 +83,19 @@ export default function Planner({ request }) {
     const data = {
       scenario:
         "Демонстрационный план. Не является заданием на реальные работы.",
+      survey: "Лютога · 2 июля 2025",
       date,
       team,
       task,
       route: chosen.map((r) => ({
+        section_id: r.id,
         section: r.name,
-        length_km: r.km,
-        objects: r.jams,
-        priority: r.priority,
+        objects: r.recordIds.length,
+        report_objects: records.filter(({ id }) => r.recordIds.includes(id))
+          .map(({ id, lat, lon }) => ({ id, lat, lon })),
         observation: observations[r.id] || null,
       })),
-      note: "Приоритеты и протяжённость условные. До расчистки необходима экспертная оценка.",
+      note: "Участки группируют точки из отчёта. Координаты расчётные. До расчистки необходима экспертная оценка.",
     };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
@@ -142,7 +110,7 @@ export default function Planner({ request }) {
     <>
       {printOpen && (
         <PrintPlan
-          plan={{ chosen, date, team, task, sum, observations }}
+          plan={{ chosen, date, team, task, objectCount, observations }}
           onClose={() => setPrintOpen(false)}
         />
       )}
@@ -152,43 +120,31 @@ export default function Planner({ request }) {
           <span className="demo-badge">КОНЦЕПЦИЯ РАЗВИТИЯ</span>
         </div>
         <div className="section-heading">
-          <h2>
-            Выберите участок.
+          <h2 id="planner-title" tabIndex={-1}>
+            Выберите участок Лютоги.
             <br />
             <span>Спланируйте выезд.</span>
           </h2>
           <p>
-            Соберите маршрут обследования или расчистки.
-            <br />
-            Попробуйте роль координатора полевой бригады.
+            Составьте план полевой проверки по материалам обследования
+            от 2 июля 2025 года.
           </p>
         </div>
         <div className="planner-notice">
           <MapPin size={17} />
           <span>
-            Интерактивный сценарий на условных данных. Выезд не отправляется
-            бригаде. Необходимость расчистки определяет специалист.
+            Точки взяты из отчёта и сгруппированы по расположению. Координаты
+            расчётные. Решение о расчистке принимает специалист.
           </span>
         </div>
         <div className="planner-workspace">
           <div className="reach-panel">
             <div className="panel-title">
               <strong>Участки реки</strong>
-              <span>01 — 03</span>
+              <span>Лютога</span>
             </div>
-            <label className="field-label">
-              Показать
-              <select
-                aria-label="Показать"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              >
-                <option>Все участки</option>
-                <option>Высокий приоритет</option>
-              </select>
-            </label>
             <div className="reach-list">
-              {visible.map((r) => (
+              {planningReaches.map((r) => (
                 <button
                   key={r.id}
                   className={
@@ -202,22 +158,13 @@ export default function Planner({ request }) {
                   </span>
                   <span>
                     <strong>{r.name}</strong>
-                    <small>
-                      {r.km} км · {r.jams} завала
-                    </small>
-                    <em
-                      className={
-                        r.priority === "Высокий" ? "priority high" : "priority"
-                      }
-                    >
-                      {r.priority} приоритет
-                    </em>
+                    <small>{r.recordIds.length} объектов · № {r.first}–{r.last}</small>
                   </span>
                 </button>
               ))}
             </div>
             <small className="planner-hint">
-              Нажмите на участок в списке или на схеме. Можно выбрать несколько.
+              Нажмите на участок в списке или на карте. Можно выбрать несколько.
             </small>
             <button
               className="reset-plan"
@@ -227,78 +174,8 @@ export default function Planner({ request }) {
             </button>
           </div>
           <div className="reach-map">
-            <svg
-              viewBox="0 0 560 600"
-              preserveAspectRatio="none"
-              aria-label="Выбор трёх участков реки"
-            >
-              <defs>
-                <pattern
-                  id="plan-grid"
-                  width="35"
-                  height="35"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M35 0H0V35"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeOpacity=".1"
-                  />
-                </pattern>
-              </defs>
-              <rect width="560" height="600" fill="url(#plan-grid)" />
-              {planningReaches.map((r) => (
-                <g
-                  key={r.id}
-                  className={
-                    "reach-shape " + (selected.includes(r.id) ? "selected" : "")
-                  }
-                >
-                  <path d={r.path} className="river-bank" />
-                  <path d={r.path} className="river-water" />
-                  <path d={r.path} className="river-center" />
-                  <path
-                    d={r.path}
-                    className="river-hit"
-                    role="button"
-                    aria-label={"Выбрать участок " + r.id}
-                    aria-pressed={selected.includes(r.id)}
-                    tabIndex="0"
-                    onClick={() => toggle(r.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        toggle(r.id);
-                      }
-                    }}
-                  />
-                </g>
-              ))}
-            </svg>
-            <div className="plan-map-label">
-              РЕЧНОЙ МАРШРУТ <span>N ↑</span>
-            </div>
-            {planningReaches.map((r) => (
-              <button
-                key={r.id}
-                className={
-                  "reach-label " + (selected.includes(r.id) ? "selected" : "")
-                }
-                style={{
-                  left: (r.x / 560) * 100 + "%",
-                  top: (r.y / 600) * 100 + "%",
-                }}
-                onClick={() => toggle(r.id)}
-                aria-label={"Выбрать " + r.name}
-              >
-                <b>{r.id}</b>
-                <span>{r.name}</span>
-              </button>
-            ))}
-            <span className="plan-map-caption">
-              СХЕМА УСЛОВНАЯ · НЕ ДЛЯ НАВИГАЦИИ
-            </span>
+            <SurveyMap selectedReachIds={selected} onToggleReach={toggle} />
+            <p className="plan-map-caption">Выбранные участки и их точки выделены на карте.</p>
           </div>
           <form className="trip-form" onSubmit={submit}>
             <div className="panel-title">
@@ -311,12 +188,8 @@ export default function Planner({ request }) {
                 <span>участков</span>
               </div>
               <div>
-                <strong>{sum}</strong>
-                <span>км по схеме</span>
-              </div>
-              <div>
-                <strong>{chosen.reduce((s, r) => s + r.jams, 0)}</strong>
-                <span>завалов</span>
+                <strong>{objectCount}</strong>
+                <span>объектов из отчёта</span>
               </div>
             </div>
             <label className="field-label">
@@ -352,30 +225,37 @@ export default function Planner({ request }) {
                 ))}
               </select>
             </label>
-            {chosen.some((r) => observations[r.id]) && (
-              <div className="plan-observations">
-                {chosen
-                  .filter((r) => observations[r.id])
-                  .map((r) => (
-                    <div key={r.id}>
-                      <strong>
-                        Участок {r.id} · {observations[r.id].status}
-                      </strong>
-                      {observations[r.id].note && (
-                        <p>{observations[r.id].note}</p>
-                      )}
-                    </div>
-                  ))}
-              </div>
+            {chosen.length > 0 && (
+              <details className="plan-observations">
+                <summary>Заметки по участкам</summary>
+                {chosen.map(({ id, name }) => (
+                  <fieldset key={id}>
+                    <legend>{id} · {name}</legend>
+                    <label className="field-label">
+                      Статус участка {id}
+                      <select value={observations[id]?.status ?? ""}
+                        onChange={(e) => updateObservation(id, "status", e.target.value)}>
+                        <option value="">Статус не задан</option>
+                        {STATUSES.map((value) => <option key={value}>{value}</option>)}
+                      </select>
+                    </label>
+                    <label className="field-label">
+                      Заметка участка {id}
+                      <textarea value={observations[id]?.note ?? ""} maxLength={600} rows={2}
+                        onChange={(e) => updateObservation(id, "note", e.target.value)} />
+                    </label>
+                  </fieldset>
+                ))}
+              </details>
             )}
             <div className="route-preview">
               <Route size={16} />
               <span>
                 {chosen.length
                   ? chosen.map((r) => r.id).join(" → ")
-                  : "Маршрут не выбран"}
+                  : "Участки не выбраны"}
               </span>
-              <small>По направлению течения</small>
+              <small>Порядок в плане</small>
             </div>
             <button type="submit" className="button primary">
               {saved ? (

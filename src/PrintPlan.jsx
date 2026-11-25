@@ -35,8 +35,8 @@ export default function PrintPlan({ plan, onClose }) {
           </div>
           <h1 id="print-plan-title">План выезда</h1>
           <p className="paper-warning">
-            Демонстрационный документ. Не является заданием на реальные работы.
-            Участки, расстояния, приоритеты и число завалов условные.
+            План по материалам обследования Лютоги от 2 июля 2025 года.
+            Участки группируют расчётные точки отчёта.
           </p>
           <dl className="paper-details">
             <div>
@@ -52,7 +52,7 @@ export default function PrintPlan({ plan, onClose }) {
               <dd>{plan.task}</dd>
             </div>
             <div>
-              <dt>Маршрут по течению</dt>
+              <dt>Порядок в плане</dt>
               <dd>{plan.chosen.map((r) => r.id).join(" → ")}</dd>
             </div>
           </dl>
@@ -61,10 +61,7 @@ export default function PrintPlan({ plan, onClose }) {
               <b>{plan.chosen.length}</b> участков
             </span>
             <span>
-              <b>{plan.sum}</b> км по схеме
-            </span>
-            <span>
-              <b>{plan.chosen.reduce((s, r) => s + r.jams, 0)}</b> завалов
+              <b>{plan.objectCount}</b> объектов из отчёта
             </span>
           </div>
           <h2>Участки и наблюдения</h2>
@@ -74,8 +71,7 @@ export default function PrintPlan({ plan, onClose }) {
                 {i + 1}. Участок {r.id} — {r.name}
               </h3>
               <p>
-                {r.km} км · Завалов: {r.jams} · Приоритет:{" "}
-                {r.priority.toLowerCase()}
+                {r.recordIds.length} объектов из отчёта · № {r.first}–{r.last}
               </p>
               <p>
                 <b>Статус:</b> {plan.observations[r.id]?.status || "Не задан"}
@@ -96,8 +92,8 @@ export default function PrintPlan({ plan, onClose }) {
             <li>Проверить условия безопасности и состав оборудования.</li>
           </ul>
           <footer>
-            Сформировано из текущих полей планировщика RIVER. Координаты и точки
-            доступа в документ не включены: подтверждённых данных нет.
+            Сформировано в планировщике RIVER. Перед полевыми работами
+            подтвердите координаты объектов и условия доступа.
           </footer>
         </article>
       </dialog>

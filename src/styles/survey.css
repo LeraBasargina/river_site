@@ -233,6 +233,44 @@
   font: 800 12px ui-monospace, monospace;
   pointer-events: none;
 }
+.survey-pin.is-in-plan span {
+  border-color: #edf8cc;
+  background: #d9eea9;
+  box-shadow: 0 0 0 3px #d9eea95e;
+}
+.survey-reach-marker {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  transform: translate(14px, -50%);
+  border: 1px solid #a0b8a8;
+  border-radius: 7px;
+  background: #183b32;
+  color: #edf4ea;
+  font-weight: 750;
+}
+.survey-reach-marker[aria-pressed="true"] {
+  border-color: #e9f7c8;
+  background: #d9eea9;
+  color: #18352a;
+}
+.survey-add-to-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  margin-top: 15px;
+  border: 1px solid #aec57f;
+  border-radius: 6px;
+  background: #d9eea9;
+  color: #203d28;
+  font-size: .82rem;
+  font-weight: 650;
+}
 .survey-map-caption {
   display: flex;
   margin: 0;
