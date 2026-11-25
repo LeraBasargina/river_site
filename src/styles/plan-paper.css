@@ -135,6 +135,20 @@
 }
 .print-plan-output { display: none; }
 
+@media screen {
+  .print-plan-preview .plan-paper h1 { font-size: clamp(1.5rem, 3.25vw, 2.25rem); }
+  .print-plan-preview .paper-warning,
+  .print-plan-preview .paper-details dd,
+  .print-plan-preview .paper-totals,
+  .print-plan-preview .paper-object p,
+  .print-plan-preview .paper-note,
+  .print-plan-preview .paper-checklist { font-size: var(--text-control); }
+  .print-plan-preview .paper-brand span,
+  .print-plan-preview .paper-details dt,
+  .print-plan-preview .plan-paper footer { font-size: var(--text-label); }
+  .print-plan-preview .paper-object h3 { font-size: var(--text-body); }
+}
+
 @media print {
   @page {
     size: A4;

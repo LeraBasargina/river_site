@@ -326,12 +326,19 @@ const fs = require("node:fs");
       imgs.filter((i) => i.complete && !i.naturalWidth).map((i) => i.src),
     );
   if (imgs.length) throw Error("Broken images " + imgs);
-  for (const width of [320, 390, 768, 1440]) {
+  await mission.getByRole("tab", { name: "Паспорт наблюдения" }).click();
+  await mission.getByText("Геопривязка кадра").waitFor();
+  for (const width of [320, 390, 480, 481, 768, 900, 901, 1440]) {
     await p.setViewportSize({ width, height: 900 });
     if (
       await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)
     )
       throw Error("Overflow " + width);
+    const typeSizes = await p.evaluate(() => [
+      "#video .mission-tabs button", "#video .passport-meta b",
+      "#video .mission-side .button", "#planner .field-label input",
+    ].map((selector) => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize)));
+    if (typeSizes.some((size) => size < 15)) throw Error("A main control is too small at " + width);
   }
   if (errors.length) throw Error(errors.join(";"));
   console.log(

@@ -17,7 +17,7 @@
 .survey-section .survey-eyebrow {
   color: var(--survey-secondary);
   font-weight: 700;
-  font-size: .75rem;
+  font-size: var(--text-label);
   letter-spacing: .09em;
   line-height: 1.5;
   margin: 0 0 8px;
@@ -38,7 +38,7 @@
   padding: 12px 15px;
   color: var(--survey-text);
   background: var(--survey-surface);
-  font-size: .9rem;
+  font-size: var(--text-body);
   font-weight: 700;
 }
 .survey-actions button {
@@ -86,7 +86,7 @@
 }
 .survey-video summary {
   padding: 12px 15px;
-  font-size: .9rem;
+  font-size: var(--text-body);
   font-weight: 700;
   cursor: pointer;
 }
@@ -173,7 +173,7 @@
   position: absolute;
   transform: translate(-50%, -50%);
   color: #e1eadc;
-  font-size: clamp(.6rem, 1.25vw, .9rem);
+  font-size: clamp(.75rem, 1.35vw, 1rem);
   font-weight: 700;
   white-space: nowrap;
   text-shadow: 0 1px 4px #101d19, 0 0 4px #101d19, 0 0 2px #101d19;
@@ -182,14 +182,14 @@
 .survey-map-label-river {
   transform: translate(-56%, -90%) rotate(61deg);
   color: #e1f7fa;
-  font-size: clamp(.6rem, 1.1vw, .78rem);
+  font-size: clamp(.72rem, 1.2vw, .9rem);
 }
 .survey-map-attribution {
   position: absolute;
   top: 11%;
   right: 4%;
   color: #d9e8df;
-  font-size: clamp(.54rem, 1vw, .68rem);
+  font-size: clamp(.67rem, 1vw, .8rem);
 }
 .survey-map-attribution a {
   text-decoration: underline;
@@ -199,7 +199,7 @@
   position: absolute;
   color: #b9cabe;
   font-family: ui-monospace, monospace;
-  font-size: clamp(8px, 1.2vw, 11px);
+  font-size: clamp(.63rem, 1.12vw, .81rem);
   pointer-events: none;
 }
 .survey-grid-lat {
@@ -227,7 +227,7 @@
   font-weight: 700;
 }
 .survey-north span {
-  font-size: .8rem;
+  font-size: var(--text-control);
 }
 .survey-scale {
   position: absolute;
@@ -235,7 +235,7 @@
   bottom: 11%;
   text-align: center;
   border-bottom: 2px solid currentColor;
-  font-size: .7rem;
+  font-size: var(--text-label);
 }
 .survey-flight-line {
   position: absolute;
@@ -294,7 +294,7 @@
   z-index: 4;
   background: #e4f5b5;
   box-shadow: 0 0 0 5px #dcef9e38, 0 0 24px #dcef9e60;
-  font: 800 12px ui-monospace, monospace;
+  font: 800 var(--text-control) ui-monospace, monospace;
   pointer-events: none;
 }
 .survey-pin.is-on-bank span {
@@ -329,7 +329,7 @@
   border-radius: 7px;
   background: #183b32;
   color: #edf4ea;
-  font-size: .8rem;
+  font-size: var(--text-control);
   font-weight: 750;
   pointer-events: none;
 }
@@ -337,7 +337,7 @@
 .survey-object-decisions p {
   margin: 0 0 8px;
   color: var(--survey-secondary);
-  font-size: .8rem;
+  font-size: var(--text-control);
 }
 .survey-object-decisions > div {
   display: flex;
@@ -352,7 +352,7 @@
   border: 1px solid var(--survey-border);
   border-radius: 6px;
   background: transparent;
-  font-size: .8rem;
+  font-size: var(--text-control);
   font-weight: 650;
 }
 .survey-object-decisions button[aria-pressed="true"] { border-color: currentColor; }
@@ -390,7 +390,7 @@
   border-radius: 5px;
   background: #14211dea;
   color: #fff;
-  font-size: .78rem;
+  font-size: var(--text-control);
   font-weight: 650;
 }
 .survey-report-photo {
@@ -402,7 +402,7 @@
 }
 .survey-card-copy h3 {
   margin: 0 0 10px;
-  font-size: clamp(1.05rem, 1.6vw, 1.45rem);
+  font-size: clamp(1.25rem, 1.85vw, 1.6rem);
   line-height: 1.2;
 }
 .survey-card dl {
@@ -417,7 +417,7 @@
   gap: 4px 12px;
   padding-top: 6px;
   border-top: 1px solid var(--survey-border);
-  font-size: clamp(.8rem, 1vw, .94rem);
+  font-size: var(--text-body);
   line-height: 1.45;
 }
 .survey-card dt {
@@ -439,7 +439,7 @@
 .survey-table {
   width: 100%;
   border-spacing: 0;
-  font-size: .84rem;
+  font-size: var(--text-control);
 }
 .survey-table thead th {
   position: sticky;
@@ -485,13 +485,13 @@
 }
 .survey-map-heading h3, .survey-registry-heading h3 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
 }
 .survey-map-heading a, .survey-video > a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: .82rem;
+  font-size: var(--text-control);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -500,7 +500,7 @@
 .survey-map-note {
   margin: 0;
   color: #c5d9c9;
-  font-size: .76rem;
+  font-size: var(--text-label);
   line-height: 1.4;
 }
 .survey-layout > .survey-inspector {
@@ -533,7 +533,7 @@
   background: transparent;
   border: 0;
   padding: 2px;
-  font-size: .78rem;
+  font-size: var(--text-control);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -545,7 +545,7 @@
   border-radius: 0;
   scrollbar-gutter: stable;
 }
-.survey-table th, .survey-table td { padding: 7px 9px; font-size: .77rem; }
+.survey-table th, .survey-table td { padding: 7px 9px; font-size: var(--text-control); }
 .survey-table tbody td:nth-child(n+3) { text-align: center; }
 .survey-table thead th:nth-child(n+3) { text-align: center; }
 .survey-planner { margin-top: 25px; }
@@ -557,19 +557,19 @@
   gap: 8px 20px;
   margin-bottom: 12px;
 }
-.survey-planner-heading h3 { margin: 0; font-size: 1.45rem; }
+.survey-planner-heading h3 { margin: 0; font-size: 1.65rem; }
 .survey-planner-heading p {
   flex: 1 1 290px;
   margin: 0;
   color: var(--survey-secondary);
-  font-size: .85rem;
+  font-size: var(--text-body);
   line-height: 1.55;
 }
 @media (max-width: 720px) {
   .survey-layout { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 435px) {
-  .survey-table th, .survey-table td { padding-inline: 5px; font-size: .74rem; }
+  .survey-table th, .survey-table td { padding-inline: 5px; font-size: var(--text-label); }
 }
 
 
@@ -589,7 +589,7 @@
   border-radius: 8px;
   background: var(--survey-surface);
   color: var(--survey-text);
-  font-size: .88rem;
+  font-size: var(--text-body);
 }
 .plan-object-heading {
   display: flex;
@@ -619,13 +619,13 @@
   color: var(--survey-text);
   font: inherit;
 }
-.plan-empty { font-size: .9rem; color: var(--survey-secondary); }
+.plan-empty { font-size: var(--text-body); color: var(--survey-secondary); }
 .plan-map-link {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   margin-top: 10px;
-  font-size: .8rem;
+  font-size: var(--text-control);
   text-decoration: underline;
   text-underline-offset: 3px;
 }

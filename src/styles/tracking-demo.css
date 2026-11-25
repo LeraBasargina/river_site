@@ -2,7 +2,7 @@
   padding-top: 0;
 }
 .lab-kicker {
-  font: 8px monospace;
+  font: var(--text-caption) monospace;
   letter-spacing: 1px;
   color: #328f95;
 }
@@ -14,7 +14,7 @@
   margin: 70px 0 32px;
 }
 .tracking-heading p {
-  font-size: 12px;
+  font-size: var(--text-control);
   color: #78909c;
   line-height: 1.9;
 }
@@ -44,11 +44,11 @@
   background: none;
   padding: 20px 0;
   text-align: left;
-  font-size: 11px;
-  color: #718d9b;
+  font-size: var(--text-control);
+  color: #4c6772;
 }
 .tracking-steps button > span {
-  font: 9px monospace;
+  font: var(--text-label) monospace;
   color: #75a1a9;
 }
 .tracking-steps button[aria-selected="true"] {
@@ -111,7 +111,7 @@
   top: -16px;
   left: 50%;
   transform: translateX(-50%);
-  font: 5px monospace;
+  font: var(--text-caption) monospace;
   letter-spacing: 0.7px;
   color: #ffe1a2;
   background: #152531b8;
@@ -137,12 +137,12 @@
   justify-content: space-between;
   gap: 8px;
   padding: 14px;
-  font: 10px monospace;
+  font: var(--text-label) monospace;
   color: #408e99;
 }
 .tracking-frame-caption b {
   font:
-    10px Arial,
+    var(--text-label) Arial,
     sans-serif;
   color: #738e99;
 }
@@ -159,8 +159,8 @@
   margin: 16px 0 12px;
 }
 .tracking-step-copy p {
-  font-size: 12px;
-  color: #79929f;
+  font-size: var(--text-control);
+  color: #526b76;
   line-height: 1.9;
   margin: 0;
 }
@@ -181,7 +181,7 @@
   border-radius: 5px;
   background: #eef7f5;
   padding: 10px 18px;
-  font: 10px monospace;
+  font: var(--text-label) monospace;
   color: #498795;
 }
 .merge-connector {
@@ -206,7 +206,7 @@
   font-weight: 400;
 }
 .merge-output small {
-  font-size: 9px;
+  font-size: var(--text-label);
 }
 .observation-merge.merged .merge-output {
   border: 1px solid #38aeb1;
@@ -223,7 +223,7 @@
   border-top: 1px solid var(--line);
 }
 .tracking-bottom > p {
-  font-size: 9px;
+  font-size: var(--text-label);
   color: #8098a4;
   line-height: 1.9;
   margin: 0;
@@ -243,7 +243,7 @@
   background: none;
   padding: 11px 13px;
   color: #448c97;
-  font-size: 10px;
+  font-size: var(--text-label);
 }
 .tracking-bottom button:disabled {
   opacity: 0.35;
@@ -257,7 +257,7 @@
   line-height: 1.6;
 }
 .image-viewer .track-focus:after {
-  font-size: 8px;
+  font-size: var(--text-caption);
   top: -20px;
 }
 .image-viewer .track-focus {
@@ -309,10 +309,10 @@
   }
   .tracking-frame-caption {
     padding: 10px;
-    font-size: 9px;
+    font-size: var(--text-label);
   }
   .tracking-frame-caption b {
-    font-size: 9px;
+    font-size: var(--text-label);
   }
   .tracking-explanation {
     padding: 12px 24px 25px;
@@ -333,7 +333,6 @@
     margin: 50px 0 25px;
   }
   .tracking-heading p {
-    font-size: 11px;
     margin-top: 20px;
   }
   .tracking-steps {
@@ -341,13 +340,10 @@
     gap: 10px;
   }
   .tracking-steps button {
-    font-size: 8px;
+    font-size: var(--text-control);
     line-height: 1.5;
     gap: 6px;
     padding: 15px 0;
-  }
-  .tracking-steps button > span {
-    font-size: 7px;
   }
   .tracking-steps svg {
     display: none;
@@ -359,13 +355,13 @@
   }
   .tracking-frame-caption {
     padding: 12px;
-    font-size: 11px;
+    font-size: var(--text-control);
   }
   .tracking-frame-caption b {
-    font-size: 11px;
+    font-size: var(--text-control);
   }
   .track-focus:after {
-    font-size: 6px;
+    font-size: var(--text-caption);
   }
   .tracking-explanation {
     grid-template-columns: 1fr;
@@ -390,16 +386,16 @@
     padding: 20px;
   }
   .tracking-bottom > p {
-    font-size: 10px;
+    font-size: var(--text-label);
   }
   .tracking-bottom > div {
     justify-content: flex-end;
   }
   .tracking-bottom button {
-    font-size: 11px;
+    font-size: var(--text-control);
   }
   .image-viewer .track-focus:after {
-    font-size: 5px;
+    font-size: var(--text-caption);
     top: -15px;
   }
 }
@@ -410,4 +406,9 @@
 .tracking-demo button:focus-visible {
   outline: 2px solid #32b9c1;
   outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .tracking-steps { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .tracking-steps button { min-height: 44px; padding: 10px 0; }
 }

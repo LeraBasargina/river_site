@@ -3,14 +3,15 @@
 }
 .mission-flow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 22px;
   padding: 20px 0;
   margin-bottom: 20px;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  color: #7a9284;
-  font-size: 11px;
+  color: #526b5d;
+  font-size: var(--text-body);
 }
 .mission-flow span {
   display: flex;
@@ -18,7 +19,7 @@
   gap: 10px;
 }
 .mission-flow b {
-  font: 10px monospace;
+  font: var(--text-label) monospace;
   color: #308e96;
 }
 .mission-workspace {
@@ -35,6 +36,7 @@
 }
 .mission-tabs {
   display: flex;
+  flex-wrap: wrap;
   padding: 0 20px;
   background: #edf3f3;
   border-bottom: 1px solid var(--line);
@@ -44,9 +46,10 @@
   background: none;
   border: 0;
   border-bottom: 2px solid transparent;
-  color: #6d8592;
-  padding: 20px 0;
-  font-size: 11px;
+  color: #4c6671;
+  padding: 18px 0;
+  font-weight: 600;
+  font-size: var(--text-body);
 }
 .mission-tabs button[aria-selected="true"] {
   color: #157c85;
@@ -107,8 +110,8 @@
   padding: 8px 10px;
   background: #092030bb;
   color: white;
-  font: 7px monospace;
-  letter-spacing: 1px;
+  font: var(--text-label) monospace;
+  letter-spacing: .05em;
   border-radius: 4px;
   backdrop-filter: blur(12px);
 }
@@ -116,7 +119,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  font-size: 11px;
+  font-size: var(--text-control);
   color: #6f8693;
   margin-top: 22px;
 }
@@ -127,9 +130,9 @@
 }
 .mission-footnote {
   display: block;
-  font-size: 10px;
+  font-size: var(--text-control);
   line-height: 1.8;
-  color: #7c909d;
+  color: #516873;
   margin: 16px 0 0;
 }
 .mission-side {
@@ -143,18 +146,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font: 8px monospace;
-  letter-spacing: 1px;
+  font: var(--text-label) monospace;
+  letter-spacing: .05em;
   color: #388a91;
 }
 .mission-side h3 {
-  font-size: 26px;
-  line-height: 1.3;
+  font-size: clamp(1.4rem, 2.15vw, 1.85rem);
+  line-height: 1.25;
   margin: 20px 0 12px;
 }
 .mission-side > p {
-  font-size: 11px;
-  color: #7d919b;
+  font-size: var(--text-body);
+  color: #516873;
 }
 .mission-route {
   margin: 18px 0 0;
@@ -185,7 +188,7 @@
   border-radius: 50%;
   width: 28px;
   height: 28px;
-  font: 11px monospace;
+  font: var(--text-control) monospace;
   flex-shrink: 0;
 }
 .mission-route button.active > b {
@@ -194,25 +197,24 @@
   border-color: transparent;
 }
 .mission-route button span {
-  font-size: 11px;
+  font-size: var(--text-control);
 }
 .mission-route button small {
   display: block;
-  font: 8px monospace;
-  margin-top: 6px;
-  color: #7f99a2;
+  font: var(--text-label) monospace;
+  margin-top: 5px;
+  color: #526f77;
 }
 .mission-route button svg {
   margin-left: auto;
   flex-shrink: 0;
 }
 .mission-side .checkpoint-description {
-  font-size: 10px;
-  min-height: 36px;
+  min-height: 3em;
 }
 .field-label textarea {
   font:
-    12px Arial,
+    var(--text-control) Arial,
     sans-serif;
   border: 1px solid #dce3d4;
   border-radius: 5px;
@@ -227,7 +229,7 @@
   width: 100%;
   border: 0;
   margin-top: 4px;
-  font-size: 11px;
+  font-size: var(--text-control);
   gap: 10px;
 }
 .mission-video {
@@ -245,8 +247,8 @@
   align-items: center;
   gap: 12px;
   padding: 14px 0;
-  font: 10px monospace;
-  color: #7995a4;
+  font: var(--text-label) monospace;
+  color: #516873;
 }
 .mission-playbar button {
   display: grid;
@@ -260,8 +262,8 @@
 }
 .mission-playbar > span:last-child {
   margin-left: auto;
-  font-size: 7px;
-  letter-spacing: 1px;
+  font-size: var(--text-label);
+  letter-spacing: .05em;
 }
 .checkpoint-row {
   display: grid;
@@ -290,14 +292,12 @@
 .checkpoint-row span {
   display: block;
   padding: 10px;
-  font: 9px monospace;
-  color: #47959d;
+  font: var(--text-label) monospace;
+  color: #286e76;
 }
 .checkpoint-row b {
-  font:
-    10px Arial,
-    sans-serif;
-  color: #4d6c78;
+  font-size: var(--text-control);
+  color: #3c5964;
   display: block;
   margin-top: 6px;
   line-height: 1.4;
@@ -322,12 +322,12 @@
 }
 .passport-meta small {
   display: block;
-  font-size: 9px;
-  color: #8398a0;
+  font-size: var(--text-label);
+  color: #536e79;
   margin-bottom: 8px;
 }
 .passport-meta b {
-  font-size: 11px;
+  font-size: var(--text-control);
   font-weight: 500;
 }
 .project-status {
@@ -345,21 +345,21 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  font: 8px monospace;
-  letter-spacing: 1px;
+  font: var(--text-label) monospace;
+  letter-spacing: .05em;
   color: #28877d;
 }
 .status-label.concept {
   color: #ad8141;
 }
 .project-status h3 {
-  font-size: 18px;
-  margin-top: 20px;
+  font-size: 1.3rem;
+  margin-top: 18px;
 }
 .project-status p {
-  font-size: 12px;
+  font-size: var(--text-control);
   line-height: 1.9;
-  color: #7d919b;
+  color: #516873;
   margin-bottom: 0;
 }
 [data-theme="dark"] .mission-workspace {
@@ -368,6 +368,9 @@
 }
 [data-theme="dark"] .mission-tabs {
   background: #0e1b2b;
+}
+[data-theme="dark"] .mission-tabs button {
+  color: #b8cdde;
 }
 [data-theme="dark"] .mission-tabs button[aria-selected="true"] {
   color: #35e0cf;
@@ -392,6 +395,10 @@
   background: #35cfc0;
   color: #072431;
 }
+[data-theme="dark"] .mission-flow,
+[data-theme="dark"] .mission-playbar,
+[data-theme="dark"] .checkpoint-row span,
+[data-theme="dark"] .passport-meta small,
 [data-theme="dark"] .mission-route button small,
 [data-theme="dark"] .mission-side > p,
 [data-theme="dark"] .mission-footnote,
@@ -433,12 +440,6 @@
     gap: 14px;
     padding: 0 15px;
   }
-  .mission-tabs button {
-    font-size: 10px;
-  }
-  .mission-side h3 {
-    font-size: 22px;
-  }
   .compare-pane,
   .passport-pane {
     padding: 15px;
@@ -446,8 +447,8 @@
 }
 @media (max-width: 700px) {
   .mission-flow {
-    gap: 8px;
-    font-size: 8px;
+    gap: 8px 11px;
+    font-size: var(--text-control);
     padding: 16px 0;
   }
   .mission-flow span {
@@ -455,9 +456,6 @@
   }
   .mission-flow svg {
     width: 10px;
-  }
-  .mission-flow b {
-    font-size: 8px;
   }
   .mission-workspace {
     grid-template-columns: 1fr;
@@ -468,18 +466,13 @@
     padding: 24px;
   }
   .mission-tabs {
-    gap: 18px;
-    justify-content: space-between;
+    gap: 0 18px;
   }
   .mission-tabs button {
-    font-size: 9px;
-    padding: 18px 0;
-  }
-  .mission-footnote {
-    font-size: 10px;
+    padding: 12px 0;
+    min-height: 44px;
   }
   .compare-labels span {
-    font-size: 5px;
     padding: 6px;
   }
   .compare-labels {
@@ -488,11 +481,7 @@
     top: 8px;
   }
   .checkpoint-row span {
-    font-size: 8px;
     padding: 8px;
-  }
-  .checkpoint-row b {
-    font-size: 9px;
   }
   .project-status {
     grid-template-columns: 1fr;
@@ -506,12 +495,6 @@
     gap: 10px;
     padding: 12px;
   }
-  .passport-meta b {
-    font-size: 10px;
-  }
-  .mission-side h3 {
-    font-size: 25px;
-  }
 }
 .image-compare {
   cursor: ew-resize;
@@ -521,4 +504,11 @@
 .image-compare img {
   -webkit-user-drag: none;
   pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .mission-playbar { flex-wrap: wrap; }
+  .mission-playbar > span:last-child { width: 100%; margin-left: 0; }
+  .checkpoint-row { grid-template-columns: 1fr; }
+  .checkpoint-row button { display: grid; grid-template-columns: minmax(0, .65fr) 1fr; align-items: center; }
 }
