@@ -210,7 +210,7 @@ export default function Mission() {
           >
             {[
               ["compare", "До / после"],
-              ["video", "Видео и маршрут"],
+              ["video", "Видео и фрагменты"],
               ["passport", "Паспорт наблюдения"],
             ].map(([id, title]) => (
               <button
@@ -437,45 +437,6 @@ export default function Mission() {
           <p>
             Выберите фрагмент съёмки, затем откройте карту с объектами из отчёта.
           </p>
-          <div className="mission-mini-map">
-            <span>СХЕМА ПРОСМОТРА · НЕ ГЕОТРЕК</span>
-            <svg
-              viewBox="0 0 300 94"
-              role="group"
-              aria-label="Синхронная схема просмотра видео"
-            >
-              <path d="M25 55Q85 -10 150 53T275 45" className="mini-river" />
-              <path d="M25 55H275" className="mini-timeline" />
-              <circle
-                className="mini-playhead"
-                cx={25 + 250 * Math.min(time / duration, 1)}
-                cy="55"
-                r="5"
-              />
-              {checkpoints.map((p, i) => (
-                <g
-                  key={p.id}
-                  role="button"
-                  aria-label={"Перейти к точке " + p.id}
-                  tabIndex="0"
-                  onClick={() => jump(i)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      jump(i);
-                    }
-                  }}
-                  className={index === i ? "active" : ""}
-                >
-                  <circle cx={25 + (250 * p.time) / duration} cy="55" r="12" />
-                  <text x={25 + (250 * p.time) / duration} y="59" textAnchor="middle">
-                    {p.id}
-                  </text>
-                </g>
-              ))}
-            </svg>
-            <small>Позиция воспроизведения · {stamp(time)}</small>
-          </div>
           <div
             className="mission-route"
             role="group"

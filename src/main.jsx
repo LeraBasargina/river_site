@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ArrowUpRight,
-  ArrowRight,
   Waves,
   Play,
-  Pause,
-  Route,
   ScanLine,
   MapPin,
   Layers,
@@ -16,7 +13,6 @@ import {
   Minus,
   Menu,
   X,
-  RotateCcw,
   Video,
   Mountain,
   Leaf,
@@ -29,37 +25,28 @@ import "./styles/mission.css";
 import "./styles/presentation.css";
 import "./styles/tracking-demo.css";
 
-import Planner from "./Planner";
 import Mission from "./Mission";
-import Survey, { featuredRecord, SurveyDemoFlight, SurveyMap, SurveyObjectCard } from "./Survey";
+import Survey from "./Survey";
 import AutoShow from "./AutoShow";
 import TrackingDemo from "./TrackingDemo";
-import records from "./lib/survey-data.json";
-import { reachForRecord } from "./lib/survey-reaches";
-
-const mapZoomLevels = [1, 1.25, 1.5, 1.75];
 const stages = [
   {
     name: "Съёмка",
-    title: "Всё начинается с полёта",
     text: "Видео с беспилотника и файл SRT с полётной телеметрией — исходные данные для обследования реки.",
     icon: Video,
   },
   {
     name: "Распознавание",
-    title: "Заметить то, что легко пропустить",
     text: "Нейросеть выделяет древесные завалы в кадре. Трекинг сопровождает объекты и помогает отфильтровать нестабильные обнаружения.",
     icon: ScanLine,
   },
   {
     name: "Геопривязка",
-    title: "У каждого объекта — своё место",
     text: "Положение БПЛА, высота и углы камеры используются для расчёта координат. Повторные наблюдения объединяются в один объект.",
     icon: MapPin,
   },
   {
     name: "Результат",
-    title: "От наблюдений к понятной картине",
     text: "Интерактивная карта, фотографии, видео с контурами и таблица объектов собираются в единый пакет результатов.",
     icon: Layers,
   },
@@ -82,42 +69,10 @@ function App() {
       localStorage.setItem("river-theme", theme);
     } catch {}
   }, [theme]);
-  const [planRequest, setPlanRequest] = useState(null);
   const [showOpen, setShowOpen] = useState(false);
-  function addSurveyReach(sectionId) {
-    setPlanRequest({ sectionId });
-    requestAnimationFrame(() => document.getElementById("planner-title")?.focus());
-  }
-  function closeShow(returnToMap) {
-    setShowOpen(false);
-    if (returnToMap) document.getElementById("survey-map-panel")?.focus();
-  }
-  const [stage, setStage] = useState(3),
-    [selectedId, setSelectedId] = useState(featuredRecord.id),
-    [zoomIndex, setZoomIndex] = useState(0),
-    [showContext, setShowContext] = useState(true),
-    [showRecords, setShowRecords] = useState(true),
-    [showFlight, setShowFlight] = useState(true),
-    [flightPlaying, setFlightPlaying] = useState(() => !matchMedia("(prefers-reduced-motion: reduce)").matches),
-    [flightRun, setFlightRun] = useState(0),
-    [menu, setMenu] = useState(false),
-    [faq, setFaq] = useState(null);
-  const item = records.find(({ id }) => id === selectedId);
-  function download() {
-    const header = "ID;Класс объекта;Расчётная широта;Расчётная долгота;Участок;Уверенность модели (0–1)";
-    const rows = records.map((record) => [
-      record.id, record.category, record.lat, record.lon, reachForRecord(record.id).id, record.confidence,
-    ].join(";"));
-    const csv = "\uFEFF" + [header, ...rows].join("\n");
-    const url = URL.createObjectURL(
-      new Blob([csv], { type: "text/csv;charset=utf-8;" }),
-    );
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "RIVER-lyutoga.csv";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
+  const closeShow = useCallback(() => setShowOpen(false), []);
+  const [menu, setMenu] = useState(false);
+  const [faq, setFaq] = useState(null);
   return (
     <>
       <header>
@@ -128,10 +83,9 @@ function App() {
         <nav className={menu ? "open" : ""}>
           {[
             ["#about", "О проекте"],
-            ["#tracking-demo", "Наблюдения"],
-            ["#demo", "Демонстрация"],
             ["#survey", "Обследование"],
-            ["#planner", "Планирование"],
+            ["#video", "Видео"],
+            ["#planner", "План выезда"],
           ].map(([href, label]) => (
             <a key={href} href={href} onClick={() => setMenu(false)}>
               {label}
@@ -148,9 +102,10 @@ function App() {
         >
           {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        <a className="header-cta" href="#demo">
-          Исследовать проект <ArrowUpRight size={16} />
-        </a>
+        <button className="header-cta start-presentation" type="button" onClick={() => setShowOpen(true)}
+          aria-label="Запустить автопрезентацию сайта" aria-pressed={showOpen}>
+          <Play size={16} /> <span>Автопрезентация</span>
+        </button>
         <button
           className="menu-toggle"
           onClick={() => setMenu(!menu)}
@@ -160,7 +115,7 @@ function App() {
         </button>
       </header>
       <main>
-        <section className="hero">
+        <section id="intro" className="hero">
           <div className="hero-copy">
             <div className="eyebrow">
               <span className="status-dot" /> ТЕХНОЛОГИИ НА СЛУЖБЕ ПРИРОДЫ
@@ -191,9 +146,11 @@ function App() {
             </div>
           </div>
           <div className="hero-visual">
-            <SurveyMap selectedId={selectedId} onSelect={setSelectedId} />
+            <a className="hero-photo" href="#survey" aria-label="Перейти к карте обследования Лютоги">
+              <img src="/media/survey-intro-poster.jpg" alt="Речной участок с высоты полёта беспилотника" />
+            </a>
             <div className="visual-caption">
-              <span>ЛЮТОГА · {records.length} ОБЪЕКТА ИЗ ОТЧЁТА</span>
+              <span>СЪЁМКА С БЕСПИЛОТНИКА</span>
               <a href="#survey" aria-label="Открыть материалы обследования">
                 <ArrowUpRight size={16} />
               </a>
@@ -272,9 +229,8 @@ function App() {
             {stages.map((s, i) => (
               <a
                 className="step"
-                href="#demo"
+                href={["#video", "#tracking-demo", "#survey-map-panel", "#survey"][i]}
                 key={s.name}
-                onClick={() => setStage(i)}
               >
                 <div className="step-top">
                   <span>0{i + 1}</span>
@@ -287,147 +243,11 @@ function App() {
             ))}
           </div>
         </section>
-        <section id="demo" className="demo section">
-          <div className="section-kicker">
-            <span>03 / ИНТЕРАКТИВНАЯ ДЕМОНСТРАЦИЯ</span>
-            <span className="demo-badge">
-              <i /> МОЖНО ПОПРОБОВАТЬ
-            </span>
-          </div>
-          <div className="section-heading">
-            <h2>
-              Проследите путь
-              <br />
-              <span>одного наблюдения.</span>
-            </h2>
-            <p>
-              Наблюдайте за пролётом, переключайте этапы и выбирайте объекты на карте.
-              <br />
-              Так видео становится понятной историей реки.
-            </p>
-          </div>
-          <div className="demo-workspace">
-            <div
-              className="demo-tabs"
-              role="tablist"
-              aria-label="Этапы обработки"
-            >
-              {stages.map((s, i) => (
-                <button
-                  key={s.name}
-                  role="tab"
-                  aria-selected={stage === i}
-                  onClick={() => setStage(i)}
-                >
-                  <span>0{i + 1}</span>
-                  {s.name}
-                  {stage === i && <ArrowUpRight size={16} />}
-                </button>
-              ))}
-            </div>
-            <div className="demo-body">
-              <div className="demo-map-panel">
-                <SurveyMap selectedId={selectedId} onSelect={setSelectedId}
-                  zoom={mapZoomLevels[zoomIndex]} showContext={showContext}
-                  showRecords={stage > 0 && showRecords} showRecordCategories>
-                  {showFlight && <SurveyDemoFlight playing={flightPlaying} run={flightRun} />}
-                </SurveyMap>
-                <div className="demo-map-controls" role="group" aria-label="Управление картой">
-                  <button type="button" aria-label="Приблизить" title="Приблизить"
-                    disabled={zoomIndex === mapZoomLevels.length - 1}
-                    onClick={() => setZoomIndex(zoomIndex + 1)}><Plus size={17} /></button>
-                  <button type="button" aria-label="Отдалить" title="Отдалить"
-                    disabled={zoomIndex === 0}
-                    onClick={() => setZoomIndex(zoomIndex - 1)}><Minus size={17} /></button>
-                  <button type="button" aria-label="Сбросить масштаб" title="Сбросить масштаб"
-                    disabled={zoomIndex === 0} onClick={() => setZoomIndex(0)}><RotateCcw size={16} /></button>
-                  <button type="button" aria-label="Дороги, здания и лес" title="Дороги, здания и лес"
-                    aria-pressed={showContext} onClick={() => setShowContext(!showContext)}><Layers size={17} /></button>
-                  {stage > 0 && (
-                    <button type="button" aria-label="Точки обследования" title="Точки обследования"
-                      aria-pressed={showRecords} onClick={() => setShowRecords(!showRecords)}><MapPin size={17} /></button>
-                  )}
-                  <button type="button" className="demo-flight-toggle" aria-pressed={showFlight}
-                    onClick={() => setShowFlight(!showFlight)}><Route size={17} /> Маршрут БПЛА</button>
-                  {showFlight && (
-                    <>
-                      <button type="button" aria-label={flightPlaying ? "Пауза пролёта" : "Продолжить пролёт"}
-                        title={flightPlaying ? "Пауза пролёта" : "Продолжить пролёт"}
-                        onClick={() => setFlightPlaying(!flightPlaying)}>
-                        {flightPlaying ? <Pause size={17} /> : <Play size={17} />}
-                      </button>
-                      <button type="button" aria-label="Повторить пролёт с начала" title="Повторить пролёт с начала"
-                        onClick={() => {
-                          setFlightRun((run) => run + 1);
-                          setFlightPlaying(true);
-                        }}><RotateCcw size={17} /></button>
-                    </>
-                  )}
-                </div>
-                <div className="demo-map-key" aria-label="Обозначения карты">
-                  {showFlight && <span><i className="demo-key-flight" aria-hidden="true" /> Условная траектория БПЛА</span>}
-                  {stage > 0 && showRecords && (
-                    <>
-                      <span><i aria-hidden="true" /> Завал в воде</span>
-                      <span><i className="demo-key-bank" aria-hidden="true" /> Завал на берегу или отмели</span>
-                    </>
-                  )}
-                </div>
-              </div>
-              <aside className="survey-section">
-                <div className="aside-eyebrow">
-                  <span>ЭТАП 0{stage + 1}</span>
-                </div>
-                <h3>{stages[stage].title}</h3>
-                <p>{stages[stage].text}</p>
-                {stage > 0 ? (
-                  <>
-                    <label className="field-label">
-                      Объект из отчёта
-                      <select value={selectedId} onChange={(event) => setSelectedId(Number(event.target.value))}>
-                        {records.map(({ id }) => <option key={id} value={id}>Объект №{id}</option>)}
-                      </select>
-                    </label>
-                    <SurveyObjectCard record={item} onPlan={addSurveyReach} />
-                  </>
-                ) : (
-                  <div className="input-card">
-                    <Video />
-                    <strong>Видеосъёмка + телеметрия</strong>
-                    <span>Координаты БПЛА · высота · углы камеры</span>
-                  </div>
-                )}
-                <div className="aside-bottom">
-                  {stage === 3 ? (
-                    <button onClick={download}>
-                      <FileDown size={16} /> Скачать данные отчёта (CSV)
-                      <ArrowUpRight size={16} />
-                    </button>
-                  ) : (
-                    <button onClick={() => setStage(stage + 1)}>
-                      Следующий этап <ArrowRight size={16} />
-                    </button>
-                  )}
-                </div>
-              </aside>
-            </div>
-            <div className="demo-footer">
-              <span>
-                <span className="status-dot" /> Обследование Лютоги · 2 июля 2025
-              </span>
-              <span>
-                Точки нанесены по расчётным координатам из отчёта.
-              </span>
-            </div>
-          </div>
-        </section>
-        <TrackingDemo />
+        <Survey onShow={() => setShowOpen(true)} />
         <Mission />
-        <Survey selectedId={selectedId} onSelect={setSelectedId} onShow={() => setShowOpen(true)} onPlan={addSurveyReach} />
-        <Planner request={planRequest} />
-        {showOpen && <AutoShow onClose={closeShow} />}
-        <section className="results section">
-          <div className="section-kicker">05 / РЕЗУЛЬТАТЫ ОБРАБОТКИ</div>
+        <TrackingDemo />
+        <section id="results" className="results section">
+          <div className="section-kicker">04 / РЕЗУЛЬТАТЫ ОБРАБОТКИ</div>
           <div className="section-heading">
             <h2>
               Не просто обнаружить.
@@ -473,7 +293,7 @@ function App() {
           </div>
         </section>
         <section id="future" className="future section">
-          <div className="section-kicker">06 / ПЕРСПЕКТИВЫ</div>
+          <div className="section-kicker">05 / ПЕРСПЕКТИВЫ</div>
           <div className="future-grid">
             <div>
               <h2>
@@ -554,7 +374,7 @@ function App() {
             </div>
           </div>
         </section>
-        <section className="closing">
+        <section id="closing" className="closing">
           <Waves size={37} />
           <h2>
             Понимание реки
@@ -567,6 +387,7 @@ function App() {
           <span>КОМПЬЮТЕРНОЕ ЗРЕНИЕ. ПРИРОДНЫЕ СИСТЕМЫ. НОВЫЙ ВЗГЛЯД.</span>
         </section>
       </main>
+      {showOpen && <AutoShow close={closeShow} />}
       <footer>
         <div className="footer-top">
           <a href="#" className="logo">

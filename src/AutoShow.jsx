@@ -1,181 +1,106 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Check, Maximize, Pause, Play, Waves, X } from "lucide-react";
-import { confidence, SurveyMap, surveyPhoto } from "./Survey";
-import { planningReaches } from "./lib/survey-reaches";
-import { sceneAt, showDuration, showFadeDuration, showScenes } from "./lib/auto-show-timeline";
-import { TEAMS } from "./lib/plan-storage";
-import { segmentationVideo } from "./lib/river-video";
-import records from "./lib/survey-data.json";
+import { ArrowLeft, ArrowRight, Maximize, Pause, Play, X } from "lucide-react";
 import "./styles/auto-show.css";
 
-const introPoster = "/media/survey-intro-poster.jpg";
+const stops = [
+  { target: "intro", title: "RIVER", seconds: 7 },
+  { target: "about", title: "О проекте", seconds: 7 },
+  { target: "workflow", title: "Принцип работы", seconds: 7 },
+  { target: "survey-footage", title: "Видео обследования", seconds: 15 },
+  { target: "survey-map-panel", title: "Дефектовка и реестр", seconds: 18 },
+  { target: "planner", title: "План выезда", seconds: 14 },
+  { target: "tracking-demo", title: "Объединение наблюдений", seconds: 8 },
+  { target: "results", title: "Результаты", seconds: 7 },
+  { target: "closing", title: "Сахалинский центр ИИ", seconds: 7 },
+];
 
-function syncVideo(video, scene, time, playing) {
-  if (!playing || scene.videoFrom === undefined) video.pause();
-  if (scene.videoFrom === undefined) return;
+export default function AutoShow({ close }) {
+  const [index, setIndex] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const controls = useRef(null);
+  const fullscreen = useRef(false);
+  const stop = stops[index];
 
-  const offset = scene.videoFrom + time - scene.at;
-  if (!playing || Math.abs(video.currentTime - offset) > 0.2) video.currentTime = offset;
-  if (playing) video.play().catch(() => {});
-}
-
-function ShowPlan() {
-  return (
-    <div className="auto-map-scene auto-plan-scene">
-      <div className="auto-copy auto-scene-copy">
-        <p>Учебный пример</p>
-        <h2>Планируем полевой осмотр</h2>
-        <span>Выбираем участки и назначаем бригаду.</span>
-      </div>
-      <div className="auto-plan-card">
-        <h3>План выезда</h3>
-        <ul>
-          {planningReaches.slice(0, 2).map(({ id, name, first, last }) => (
-            <li key={id}><Check aria-hidden="true" size={22} /> {id} · {name} · № {first}–{last}</li>
-          ))}
-        </ul>
-        <dl>
-          <div><dt>Бригада</dt><dd>{TEAMS[0]}</dd></div>
-          <div><dt>Задача</dt><dd>Полевой осмотр</dd></div>
-        </dl>
-        <p>Решение о расчистке принимают после оценки участка.</p>
-      </div>
-    </div>
-  );
-}
-
-export default function AutoShow({ onClose }) {
-  const dialog = useRef(null);
-  const aerial = useRef(null);
-  const playhead = useRef(0);
-  const [elapsed, setElapsed] = useState(0);
-  const [playing, setPlaying] = useState(() => !matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const scene = sceneAt(elapsed);
-  const kind = scene.kind;
-  const record = kind === "report" ? records.find(({ id }) => id === scene.recordId) : null;
-  const flight = kind === "flight" ? (elapsed - scene.at) / (showScenes[2].at - scene.at) : null;
-  const fade = !playing && (elapsed === 0 || elapsed === showDuration) ? 0 :
-    Math.max(0, 1 - Math.min(elapsed, showDuration - elapsed) / showFadeDuration);
+  function step(offset) {
+    setIndex((current) => (current + offset + stops.length) % stops.length);
+  }
 
   useEffect(() => {
-    const element = dialog.current;
-    element.showModal();
-    return () => element.close();
-  }, []);
+    const previous = document.activeElement;
+    controls.current.querySelector("button").focus({ preventScroll: true });
+    function exitOnEscape(event) {
+      if (event.key === "Escape" && !event.defaultPrevented && !document.querySelector("dialog[open]")) {
+        close();
+      }
+    }
+    document.addEventListener("keydown", exitOnEscape);
+    return () => {
+      document.removeEventListener("keydown", exitOnEscape);
+      if (fullscreen.current && document.fullscreenElement === document.documentElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      previous?.focus({ preventScroll: true });
+    };
+  }, [close]);
+
+  useEffect(() => {
+    const element = document.getElementById(stop.target);
+    const behavior = matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
+    element?.scrollIntoView({ behavior, block: "start" });
+    if (stop.target !== "survey-footage") return;
+    const wasOpen = element.open;
+    element.open = true;
+    const video = element.querySelector("video");
+    const previousTime = video.currentTime;
+    video.currentTime = 0;
+    return () => {
+      video.pause();
+      video.currentTime = previousTime;
+      element.open = wasOpen;
+    };
+  }, [stop]);
 
   useEffect(() => {
     if (!playing) return;
-    let frame;
-    const start = performance.now() - playhead.current * 1000;
-    const advance = (now) => {
-      const next = Math.max(0, (now - start) / 1000) % showDuration;
-      playhead.current = next;
-      setElapsed(next);
-      frame = requestAnimationFrame(advance);
+    const timer = window.setTimeout(() => {
+      setIndex((current) => (current + 1) % stops.length);
+    }, stop.seconds * 1000);
+    const video = stop.target === "survey-footage" ? document.querySelector("#survey-footage video") : null;
+    video?.play().catch(() => {});
+    return () => {
+      window.clearTimeout(timer);
+      video?.pause();
     };
-    frame = requestAnimationFrame(advance);
-    return () => cancelAnimationFrame(frame);
-  }, [playing]);
+  }, [playing, stop]);
 
-  useEffect(() => {
-    syncVideo(aerial.current, scene, playhead.current, playing);
-  }, [scene, playing]);
-
-  function close(returnToMap = false) {
-    dialog.current.close();
-    onClose(returnToMap);
-  }
-
-  function seek(value) {
-    setPlaying(false);
-    playhead.current = value;
-    setElapsed(value);
-    syncVideo(aerial.current, sceneAt(value), value, false);
-  }
-
-  function togglePlayback() {
-    if (elapsed === showDuration) {
-      playhead.current = 0;
-      setElapsed(0);
-    }
-    setPlaying((value) => !value);
+  async function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        fullscreen.current = false;
+      } else {
+        await document.documentElement.requestFullscreen();
+        fullscreen.current = true;
+      }
+    } catch {}
   }
 
   return (
-    <dialog ref={dialog} className="auto-show" aria-labelledby="auto-title"
-      onCancel={(event) => { event.preventDefault(); close(); }}>
-      <div className="auto-toolbar">
-        <span id="auto-title"><Waves size={23} /> RIVER <span>· AIJ-2026</span></span>
-        <div>
-          <button type="button" className="auto-return" onClick={() => close(true)}>
-            <ArrowLeft size={17} /> К карте
-          </button>
-          {document.fullscreenEnabled && <button type="button" aria-label="Переключить полноэкранный режим" onClick={() => {
-            if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-            else dialog.current.requestFullscreen().catch(() => {});
-          }}><Maximize size={19} /></button>}
-          <button type="button" onClick={() => close()} aria-label="Закрыть автопоказ"><X size={23} /></button>
-        </div>
-      </div>
-      <div className={`auto-stage auto-stage-${kind}`} data-scene-at={scene.at}>
-        <video ref={aerial} className={kind === "detection" ? "auto-aerial auto-detection-video" : "auto-aerial"}
-          src={segmentationVideo.src} poster={kind === "detection" ? segmentationVideo.poster : introPoster}
-          hidden={scene.videoFrom === undefined}
-          preload="auto" muted playsInline aria-hidden="true" />
-        {kind === "intro" && (
-          <div className="auto-copy auto-intro">
-            <p>Сахалинский центр ИИ</p>
-            <h2>RIVER</h2>
-            <span>Древесные завалы на реках глазами беспилотника</span>
-          </div>
-        )}
-        {kind === "detection" && (
-          <div className="auto-copy auto-detection-copy">
-            <p>Фрагмент видеообработки</p>
-            <h2>Выявляем<br />древесные завалы</h2>
-          </div>
-        )}
-        {(kind === "flight" || kind === "report") && (
-          <div className="auto-map-scene">
-            <div className="auto-map-side">
-              <SurveyMap selectedId={record?.id ?? null} flight={flight} />
-              <p>{kind === "flight" ? "Точки из отчёта · траектория полёта условная" : "Расчётные координаты из отчёта"}</p>
-            </div>
-            <div className="auto-copy auto-scene-copy">
-              <p>Обследование · 2 июля 2025</p>
-              {kind === "flight" && <h2>Беспилотник снимает речной участок</h2>}
-              {record && (
-                <>
-                  <h2>Объект № {record.id}</h2>
-                  <div className="auto-object-photo">
-                    <img src={surveyPhoto(record)} alt={`Кадр объекта № ${record.id} из отчёта`} />
-                  </div>
-                  <span>{record.category}</span>
-                  <small>Уверенность модели · {confidence(record)}</small>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-        {kind === "plan" && <ShowPlan />}
-        {kind === "outro" && (
-          <div className="auto-copy auto-outro">
-            <p><Waves size={27} aria-hidden="true" /> RIVER</p>
-            <h2>Сахалинский<br />центр ИИ</h2>
-            <span>От аэросъёмки к карте и плану осмотра</span>
-          </div>
-        )}
-        <div className="auto-fade" style={{ opacity: fade }} aria-hidden="true" />
-      </div>
-      <div className="auto-controls">
-        <button type="button" onClick={togglePlayback} aria-label={playing ? "Пауза" : "Воспроизвести"}>
-          {playing ? <Pause size={20} /> : <Play size={20} />}
+    <div ref={controls} className="presentation-controls" role="region" aria-label="Управление автопрезентацией">
+      <span aria-live="polite"><b>{stop.title}</b><small>{index + 1} из {stops.length}</small></span>
+      <div className="presentation-buttons">
+        <button type="button" aria-label={playing ? "Пауза автопрезентации" : "Продолжить автопрезентацию"}
+          title={playing ? "Пауза" : "Продолжить"} onClick={() => setPlaying((value) => !value)}>
+          {playing ? <Pause size={18} /> : <Play size={18} />}
         </button>
-        <input type="range" min="0" max={showDuration} step="0.1" value={elapsed}
-          aria-label="Позиция автопоказа" onChange={(event) => seek(Number(event.target.value))} />
-        <span>{String(Math.floor(elapsed)).padStart(2, "0")} / {showDuration} с</span>
-        <span className="auto-current-phase">{scene.title}</span>
+        <button type="button" aria-label="Предыдущий экран" title="Предыдущий экран" onClick={() => step(-1)}><ArrowLeft size={18} /></button>
+        <button type="button" aria-label="Следующий экран" title="Следующий экран" onClick={() => step(1)}><ArrowRight size={18} /></button>
+        {document.fullscreenEnabled && (
+          <button type="button" aria-label="Переключить полноэкранный режим" title="Полноэкранный режим"
+            onClick={toggleFullscreen}><Maximize size={17} /></button>
+        )}
+        <button type="button" aria-label="Завершить автопрезентацию" title="Завершить" onClick={close}><X size={19} /></button>
       </div>
-    </dialog>
+    </div>
   );
 }

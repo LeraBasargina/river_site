@@ -1,20 +1,3 @@
-.demo-workspace {
-  border-radius: 14px;
-  box-shadow: 0 20px 60px #123e4e09;
-}
-.demo-body {
-  grid-template-columns: 1.5fr 1fr;
-}
-.demo-body aside {
-  padding: 34px;
-}
-.reach-map {
-  background-image: radial-gradient(
-    ellipse at 50% 50%,
-    #34a3ad15,
-    transparent 70%
-  );
-}
 .reach-card {
   transition:
     background 0.25s,
@@ -46,19 +29,10 @@
   background: linear-gradient(120deg, #73f0de, #8acbfa);
 }
 [data-theme="dark"] .workflow,
-[data-theme="dark"] .demo-workspace,
 [data-theme="dark"] .planner-workspace {
   background: #0b1421;
   border-color: #273a4e;
 }
-[data-theme="dark"] .demo-tabs {
-  background: #0e1b2b;
-}
-[data-theme="dark"] .demo-tabs button[aria-selected="true"] {
-  color: #35e0cf;
-  border-color: #35e0cf;
-}
-[data-theme="dark"] .input-card,
 [data-theme="dark"] .reach-card {
   background: #0f1d2c;
   border-color: #253c4d;
@@ -73,8 +47,7 @@
 [data-theme="dark"] .step p,
 [data-theme="dark"] .result-grid p,
 [data-theme="dark"] .faq-item p,
-[data-theme="dark"] .video-copy p,
-[data-theme="dark"] .demo-body aside > p {
+[data-theme="dark"] .video-copy p {
   color: #94aabe;
 }
 [data-theme="dark"] .section-kicker,
@@ -110,15 +83,6 @@
 }
 [data-theme="dark"] .future-list article > svg {
   color: #63b8df;
-}
-[data-theme="dark"] .planner-notice {
-  background: #102b35;
-  border-color: #24505d;
-  color: #a6ccd6;
-}
-[data-theme="dark"] .reach-map {
-  background-color: #081320;
-  color: #b9dbea;
 }
 [data-theme="dark"] .reach-card.selected {
   background: linear-gradient(110deg, #12343e, #112435);
@@ -158,23 +122,6 @@
 [data-theme="dark"] .closing {
   background: radial-gradient(ellipse at center, #10313c, transparent 67%);
 }
-[data-theme="dark"] .demo-badge,
 [data-theme="dark"] .header-cta {
   border-color: #2c465a;
-}
-@media (max-width: 1050px) {
-  .demo-body {
-    grid-template-columns: 1.2fr 1fr;
-  }
-  .demo-body aside {
-    padding: 24px;
-  }
-}
-@media (max-width: 700px) {
-  .demo-body {
-    grid-template-columns: 1fr;
-  }
-  .demo-body aside {
-    padding: 24px;
-  }
 }

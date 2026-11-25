@@ -32,52 +32,63 @@ const fs = require("node:fs");
     )
   )
     throw Error("Bad theme restored");
-  const hero = p.locator(".hero-visual");
-  const demo = p.locator("#demo");
-  if (await hero.getByRole("button", { name: /Объект №/ }).count() !== 22)
-    throw Error("Homepage did not use the 22 report points");
-  await hero.getByRole("button", { name: "Объект №22", exact: true }).click();
-  await demo.getByAltText("Кадр из отчёта с разметкой объекта №22").waitFor();
-  await demo.getByLabel("Объект из отчёта").selectOption("7");
-  await p.locator("#survey").getByAltText("Кадр из отчёта с разметкой объекта №7").waitFor();
-  await demo.getByRole("button", { name: "Приблизить" }).click();
-  if (!(await demo.locator(".survey-map-content").getAttribute("style")).includes("scale(1.25)"))
+  const stand = p.locator("#survey");
+  const surveyMap = stand.locator("#survey-map-panel");
+  const registry = stand.getByRole("region", { name: /Объекты из отчёта/ });
+  if (await p.locator("main .survey-map").count() !== 1)
+    throw Error("The page must use a single survey map");
+  if (await stand.getByRole("tablist").count()) throw Error("Legacy processing tabs are still visible");
+  if (await surveyMap.getByRole("button", { name: /Объект №/ }).count() !== 22 ||
+      await registry.locator("tbody tr").count() !== 22)
+    throw Error("The survey map and registry must contain all 22 report objects");
+  await surveyMap.getByRole("button", { name: "Объект №22", exact: true }).click();
+  await stand.getByAltText("Кадр из отчёта с разметкой объекта №22").waitFor();
+  if (await registry.getByRole("button", { name: "Показать объект №22 на карте" }).getAttribute("aria-pressed") !== "true")
+    throw Error("The clicked map point did not select its registry row");
+  if (!(await registry.evaluate((list) => {
+    const row = list.querySelector("tbody tr.is-selected").getBoundingClientRect();
+    const header = list.querySelector("thead th").getBoundingClientRect();
+    return row.top >= header.bottom - 1 && row.bottom <= list.getBoundingClientRect().bottom;
+  }))) throw Error("The registry must scroll its selected row into view");
+  await registry.getByRole("button", { name: "Показать объект №7 на карте" }).click();
+  await stand.getByAltText("Кадр из отчёта с разметкой объекта №7").waitFor();
+  if (await surveyMap.getByRole("button", { name: "Объект №7", exact: true }).getAttribute("aria-pressed") !== "true")
+    throw Error("The registry did not select its map point");
+  await stand.getByRole("button", { name: "Приблизить" }).click();
+  if (!(await surveyMap.locator(".survey-map-content").getAttribute("style")).includes("scale(1.25)"))
     throw Error("Zoom did not scale the report map");
-  await demo.getByRole("button", { name: "Сбросить масштаб" }).click();
-  await demo.getByRole("button", { name: "Дороги, здания и лес" }).click();
-  if (await demo.locator(".survey-layer-roads").count()) throw Error("Layer toggle did not hide roads");
-  await demo.getByRole("button", { name: "Дороги, здания и лес" }).click();
-  await demo.getByRole("button", { name: "Точки обследования" }).click();
-  if (await demo.locator(".survey-pin").count()) throw Error("Report markers did not hide");
-  await demo.getByRole("button", { name: "Точки обследования" }).click();
-  if ((await demo.locator(".survey-pin.is-on-bank").count()) !== 3)
+  await stand.getByRole("button", { name: "Сбросить масштаб" }).click();
+  await stand.getByRole("button", { name: "Дороги, здания и лес" }).click();
+  if (await surveyMap.locator(".survey-layer-roads").count()) throw Error("Layer toggle did not hide roads");
+  await stand.getByRole("button", { name: "Дороги, здания и лес" }).click();
+  await stand.getByRole("button", { name: "Точки обследования" }).click();
+  if (await surveyMap.locator(".survey-pin").count()) throw Error("Report markers did not hide");
+  await stand.getByRole("button", { name: "Точки обследования" }).click();
+  if ((await surveyMap.locator(".survey-pin.is-on-bank").count()) !== 3)
     throw Error("Report markers did not distinguish bank and water detections");
-  await demo.getByRole("tab", { name: "Съёмка" }).click();
-  if (await demo.locator(".survey-pin").count()) throw Error("Filming stage shows report markers before analysis");
-  const demoFlight = demo.locator(".survey-demo-flight");
+  const demoFlight = surveyMap.locator(".survey-demo-flight");
   const demoDrone = demoFlight.locator(".survey-demo-drone");
   const initialPosition = await demoDrone.evaluate((drone) => drone.getCTM().e);
   await p.waitForFunction((x) =>
-    Math.abs(document.querySelector("#demo .survey-demo-drone").getCTM().e - x) > 1,
+    Math.abs(document.querySelector(".survey-demo-drone").getCTM().e - x) > 1,
     initialPosition
   );
-  await demo.getByRole("button", { name: "Пауза пролёта" }).click();
+  await stand.getByRole("button", { name: "Пауза пролёта" }).click();
   if (!(await demoFlight.evaluate((map) => map.animationsPaused())))
     throw Error("Drone flight did not pause");
-  await demo.getByRole("button", { name: "Продолжить пролёт" }).click();
+  await stand.getByRole("button", { name: "Продолжить пролёт" }).click();
   if (await demoFlight.evaluate((map) => map.animationsPaused()))
     throw Error("Drone flight did not resume");
-  await demo.getByRole("button", { name: "Повторить пролёт с начала" }).click();
+  await stand.getByRole("button", { name: "Повторить пролёт с начала" }).click();
   if (await demoFlight.evaluate((map) => map.getCurrentTime()) > 0.5)
     throw Error("Drone flight did not restart");
-  await demo.getByRole("button", { name: "Маршрут БПЛА" }).click();
+  await stand.getByRole("button", { name: "Маршрут БПЛА" }).click();
   if (await demoFlight.count()) throw Error("Flight toggle did not hide the route");
-  await demo.getByRole("button", { name: "Маршрут БПЛА" }).click();
+  await stand.getByRole("button", { name: "Маршрут БПЛА" }).click();
   await demoFlight.waitFor();
-  await demo.getByRole("tab", { name: "Результат" }).click();
   const [reportCsv] = await Promise.all([
     p.waitForEvent("download"),
-    demo.getByRole("button", { name: "Скачать данные отчёта (CSV)" }).click(),
+    stand.getByRole("button", { name: "Скачать данные отчёта (CSV)" }).click(),
   ]);
   const csv = fs.readFileSync(await reportCsv.path(), "utf8").trim().split("\n");
   if (csv.length !== 23 || !csv[1].includes("46.7722583;142.4938747;A") ||
@@ -125,7 +136,6 @@ const fs = require("node:fs");
     const player = document.querySelector("#video video");
     return player?.readyState >= 1 && Math.abs(player.currentTime - 24) < 0.15;
   });
-  const surveyMap = p.locator("#survey-map-panel");
   await surveyMap.locator(".survey-layer-water path").first().waitFor();
   await surveyMap.locator(".survey-layer-roads path").first().waitFor();
   await surveyMap.locator(".survey-layer-buildings path").first().waitFor();
@@ -134,10 +144,10 @@ const fs = require("node:fs");
   await p.locator("#survey").getByRole("button", { name: "Участок C в план" }).click();
   const planner = p.locator("#planner");
   const northern = planner.getByRole("button", { name: /Северо-западный участок/ }).filter({ hasText: "Северо-западный участок" });
-  const southernPin = planner.getByRole("button", { name: /Участок A на карте/ });
+  const southernPin = surveyMap.getByRole("button", { name: /Участок A на карте/ });
   if (await northern.getAttribute("aria-pressed") !== "true") throw Error("Report reach was not added");
   await southernPin.click();
-  if (await planner.locator(".survey-pin.is-in-plan").count() !== 15) throw Error("Planning map highlights the wrong report points");
+  if (await surveyMap.locator(".survey-pin.is-in-plan").count() !== 15) throw Error("Planning map highlights the wrong report points");
   await planner.getByLabel("Дата выезда").fill("2026-12-01");
   await planner.locator("summary").click();
   await planner.getByLabel("Заметка участка C").fill("Проверить доступ к берегу");
@@ -158,23 +168,31 @@ const fs = require("node:fs");
     throw Error("JSON export did not match the selected report sections");
   await p.reload();
   if (await planner.locator(".reach-card.selected").count() !== 2) throw Error("Saved survey sections did not restore");
-  await p.getByRole("button", { name: "Смотреть автопоказ · 90 сек." }).click();
-  const show = p.getByRole("dialog", { name: /RIVER.*AIJ-2026/ });
-  const playhead = show.getByRole("slider", { name: "Позиция автопоказа" });
-  await playhead.fill("42");
-  await show.getByRole("heading", { name: "Объект № 7" }).waitFor();
-  await playhead.fill("53");
-  await show.getByRole("heading", { name: "Объект № 19" }).waitFor();
-  await playhead.fill("65");
-  await show.getByText("Учебный пример", { exact: true }).waitFor();
-  await playhead.fill("89.7");
-  await show.getByRole("button", { name: "Воспроизвести" }).click();
-  await show.getByRole("heading", { name: "RIVER", exact: true }).waitFor();
-  await show.getByRole("button", { name: "Пауза" }).waitFor();
-  await show.getByRole("button", { name: "К карте" }).click();
+  await p.emulateMedia({ reducedMotion: "reduce" });
+  await p.clock.install();
+  await p.getByRole("button", { name: "Запустить автопрезентацию сайта" }).click();
+  const show = p.getByRole("region", { name: "Управление автопрезентацией" });
+  await show.getByText("RIVER", { exact: true }).waitFor();
+  await p.clock.fastForward(7200);
+  await show.getByText("О проекте", { exact: true }).waitFor();
+  await show.getByRole("button", { name: "Пауза автопрезентации" }).click();
+  await p.clock.fastForward(20000);
+  await show.getByText("О проекте", { exact: true }).waitFor({ timeout: 1000 });
+  const next = show.getByRole("button", { name: "Следующий экран" });
+  await next.click();
+  await next.click();
+  await p.locator("#survey-footage[open]").waitFor();
+  await next.click();
+  await show.getByText("Дефектовка и реестр", { exact: true }).waitFor();
+  await p.waitForFunction(() => document.querySelector("#survey-map-panel").getBoundingClientRect().top < 175);
+  await next.click();
+  await show.getByText("План выезда", { exact: true }).waitFor();
+  for (let i = 0; i < 4; i += 1) await next.click();
+  await show.getByText("RIVER", { exact: true }).waitFor();
+  await p.keyboard.press("Escape");
   await show.waitFor({ state: "detached" });
-  if ((await p.evaluate(() => document.activeElement.id)) !== "survey-map-panel")
-    throw Error("Autoplay did not return focus to the survey map");
+  if (await p.locator("#survey-footage[open]").count()) throw Error("Autoplay did not restore footage disclosure");
+  if (await planner.locator(".reach-card.selected").count() !== 2) throw Error("Autoplay changed the user's plan");
   const broken = await p.evaluate(() =>
     [...document.querySelectorAll('a[href^="#"]')]
       .map((a) => a.getAttribute("href"))

@@ -1,20 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PrintPlan from "./PrintPlan";
 import { PLAN_STORAGE_KEY, readPlan, validDate, TEAMS, TASKS, STATUSES } from "./lib/plan-storage.js";
 import { planningReaches } from "./lib/survey-reaches";
-import { SurveyMap } from "./Survey";
 import records from "./lib/survey-data.json";
 import {
   ArrowUpRight,
   Check,
   CalendarDays,
   Download,
-  MapPin,
   Route,
   RotateCcw,
   Printer,
 } from "lucide-react";
-export default function Planner({ request }) {
+export default function Planner({ renderSurvey }) {
   const [printOpen, setPrintOpen] = useState(false);
   const [initial] = useState(() => {
     try {
@@ -32,18 +30,6 @@ export default function Planner({ request }) {
   const [observations, setObservations] = useState(initial?.observations || {});
   const [saved, setSaved] = useState(false);
   const [message, setMessage] = useState("");
-  useEffect(() => {
-    if (!request || !planningReaches.some(({ id }) => id === request.sectionId)) return;
-    setSelected((s) =>
-      s.includes(request.sectionId) ? s : [...s, request.sectionId],
-    );
-    setSaved(false);
-    setMessage(
-      "Участок " +
-        request.sectionId +
-        " добавлен из обследования. Сохраните план после выбора даты.",
-    );
-  }, [request]);
   const chosen = planningReaches.filter((r) => selected.includes(r.id));
   const objectCount = chosen.reduce((sum, reach) => sum + reach.recordIds.length, 0);
   function change(fn) {
@@ -57,6 +43,12 @@ export default function Planner({ request }) {
         s.includes(id) ? s.filter((x) => x !== id) : [...s, id],
       ),
     );
+  }
+  function addReach(id) {
+    if (selected.includes(id)) return;
+    setSelected((ids) => ids.includes(id) ? ids : [...ids, id]);
+    setSaved(false);
+    setMessage(`Участок ${id} добавлен. Укажите дату, чтобы сохранить план.`);
   }
   function updateObservation(id, field, value) {
     change(() => setObservations((observations) => ({
@@ -114,28 +106,11 @@ export default function Planner({ request }) {
           onClose={() => setPrintOpen(false)}
         />
       )}
-      <section id="planner" className="planner section">
-        <div className="section-kicker">
-          <span>04 / ОТ НАБЛЮДЕНИЯ К ДЕЙСТВИЮ</span>
-          <span className="demo-badge">КОНЦЕПЦИЯ РАЗВИТИЯ</span>
-        </div>
-        <div className="section-heading">
-          <h2 id="planner-title" tabIndex={-1}>
-            Выберите участок Лютоги.
-            <br />
-            <span>Спланируйте выезд.</span>
-          </h2>
-          <p>
-            Составьте план полевой проверки по материалам обследования
-            от 2 июля 2025 года.
-          </p>
-        </div>
-        <div className="planner-notice">
-          <MapPin size={17} />
-          <span>
-            Точки взяты из отчёта и сгруппированы по расположению. Координаты
-            расчётные. Решение о расчистке принимает специалист.
-          </span>
+      {renderSurvey({ selectedReaches: selected, toggleReach: toggle, addReach })}
+      <section id="planner" className="planner survey-planner" aria-labelledby="planner-title">
+        <div className="survey-planner-heading">
+          <h3 id="planner-title">План выезда</h3>
+          <p>Учебный план полевой проверки. Выберите участки на общей карте или в списке. Решение о расчистке принимает специалист по итогам осмотра.</p>
         </div>
         <div className="planner-workspace">
           <div className="reach-panel">
@@ -172,10 +147,6 @@ export default function Planner({ request }) {
             >
               <RotateCcw size={13} /> Сбросить выбор
             </button>
-          </div>
-          <div className="reach-map">
-            <SurveyMap selectedReachIds={selected} onToggleReach={toggle} />
-            <p className="plan-map-caption">Выбранные участки и их точки выделены на карте.</p>
           </div>
           <form className="trip-form" onSubmit={submit}>
             <div className="panel-title">

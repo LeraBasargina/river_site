@@ -1,9 +1,12 @@
-import React, { useLayoutEffect, useRef } from "react";
-import { ArrowUpRight, ClipboardList, FileDown, MapPin, Play, Video } from "lucide-react";
+import React, { useLayoutEffect, useRef, useState } from "react";
+import {
+  ArrowUpRight, Check, ClipboardList, FileDown, Layers, MapPin,
+  Minus, Pause, Play, Plus, RotateCcw, Route, Video,
+} from "lucide-react";
+import Planner from "./Planner";
+import { segmentationVideo } from "./lib/river-video";
 import records from "./lib/survey-data.json";
 import basemap from "./lib/survey-basemap.json";
-import { showDuration } from "./lib/auto-show-timeline";
-import { segmentationVideo } from "./lib/river-video";
 import { planningReaches, reachForRecord } from "./lib/survey-reaches";
 import "./styles/survey.css";
 
@@ -47,24 +50,27 @@ const mapWidthMetres = (bounds.east - bounds.west) * 111320 *
   Math.cos((Math.PI * (bounds.north + bounds.south)) / 360);
 const mapHeightMetres = (bounds.north - bounds.south) * 111320;
 
-export const featuredRecord = records.find(({ id }) => id === 19);
-export const surveyPhoto = (record) => `/media/survey/${record.photo}`;
-export const coordinates = ({ lat, lon }) => `${lat.toFixed(7)}, ${lon.toFixed(7)}`;
-export const confidence = (record) =>
+const featuredRecord = records.find(({ id }) => id === 19);
+const isOnBank = ({ category }) => category === "Древесный завал на берегу/отмели";
+const bankCount = records.filter(isOnBank).length;
+const zoomLevels = [1, 1.25, 1.5, 1.75];
+const surveyPhoto = (record) => `/media/survey/${record.photo}`;
+const coordinates = ({ lat, lon }) => `${lat.toFixed(7)}, ${lon.toFixed(7)}`;
+const confidence = (record) =>
   new Intl.NumberFormat("ru-RU", { style: "percent", maximumFractionDigits: 1 }).format(record.confidence);
 
 // The first exported waterway is the Lyutoga centreline. Keep both ends
 // of the illustrative flight inset so the drone stays in the map frame.
 const demoFlightPath = mapPath(basemap.layers.waterways[0].slice(3, -3));
 
-export function SurveyDemoFlight({ playing, run }) {
+function SurveyDemoFlight({ playing, run }) {
   const overlay = useRef(null);
   useLayoutEffect(() => {
-    overlay.current.setCurrentTime(0);
+    overlay.current.setCurrentTime?.(0);
   }, [run]);
   useLayoutEffect(() => {
-    if (playing) overlay.current.unpauseAnimations();
-    else overlay.current.pauseAnimations();
+    if (playing) overlay.current.unpauseAnimations?.();
+    else overlay.current.pauseAnimations?.();
   }, [playing]);
 
   return (
@@ -85,27 +91,18 @@ export function SurveyDemoFlight({ playing, run }) {
   );
 }
 
-export function SurveyMap({
+function SurveyMap({
   selectedId,
   onSelect,
-  flight = null,
   selectedReachIds = [],
   onToggleReach,
   zoom = 1,
   showRecords = true,
   showContext = true,
-  showRecordCategories = false,
   children,
 }) {
   const selected = records.find(({ id }) => id === selectedId);
   const center = selected && position(selected);
-  // Illustrative animation. The report has object coordinates only.
-  const start = { lat: 46.7715, lon: 142.4985 };
-  const drone = {
-    lat: start.lat + (featuredRecord.lat - start.lat) * flight,
-    lon: start.lon + (featuredRecord.lon - start.lon) * flight,
-  };
-
   return (
     <div className="survey-map" role="group" aria-label="Карта реки Лютоги и расчётных координат объектов обследования"
       style={{ aspectRatio: mapWidthMetres / mapHeightMetres }}>
@@ -140,22 +137,18 @@ export function SurveyMap({
         {showRecords && records.map((record) => {
           const selected = record.id === selectedId;
           const style = position(record);
-          const inPlan = onToggleReach && selectedReachIds.includes(reachForRecord(record.id).id);
-          const onBank = showRecordCategories && record.category === "Древесный завал на берегу/отмели";
+          const inPlan = selectedReachIds.includes(reachForRecord(record.id).id);
+          const onBank = isOnBank(record);
           const classes = `survey-pin${selected ? " is-selected" : ""}${inPlan ? " is-in-plan" : ""}${onBank ? " is-on-bank" : ""}`;
-          return onSelect ? (
+          return (
             <button key={record.id} type="button" className={classes} style={style}
               onClick={() => onSelect(record.id)} aria-label={`Объект №${record.id}`}
               aria-pressed={selected} title={`Объект №${record.id}`}>
               {selected ? record.id : <span aria-hidden="true" />}
             </button>
-          ) : (
-            <span key={record.id} className={classes} style={style} aria-hidden="true">
-              {selected ? record.id : <span />}
-            </span>
           );
         })}
-        {onToggleReach && planningReaches.map((reach) => (
+        {planningReaches.map((reach) => (
           <button key={reach.id} type="button" className="survey-reach-marker"
             style={position(records.find(({ id }) => id === reach.markerId))}
             aria-label={`Участок ${reach.id} на карте — ${reach.name}`}
@@ -165,120 +158,207 @@ export function SurveyMap({
             {reach.id}
           </button>
         ))}
-        {flight !== null && (
-          <>
-            <svg className="survey-flight-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              <line x1={position(start).left} y1={position(start).top}
-                x2={position(drone).left} y2={position(drone).top} />
-            </svg>
-            <div className="survey-drone" style={position(drone)} aria-hidden="true">
-              <span className="survey-drone-body" />
-              <span className="survey-rotor top-left" />
-              <span className="survey-rotor top-right" />
-              <span className="survey-rotor bottom-left" />
-              <span className="survey-rotor bottom-right" />
-            </div>
-          </>
-        )}
       </div>
       <div aria-hidden="true" className="survey-north">↑ <span>С</span></div>
       <div aria-hidden="true" className="survey-scale" style={{ width: `${(100 * 200 * zoom) / mapWidthMetres}%` }}>200 м</div>
       <span className="survey-map-attribution">
-        {onSelect
-          ? <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">{basemap.attribution}</a>
-          : "© OpenStreetMap"}
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">{basemap.attribution}</a>
       </span>
     </div>
   );
 }
 
-export function SurveyObjectCard({ record: selected, onPlan }) {
-  const reach = reachForRecord(selected.id);
+function SurveyObjectCard({ record, onPlan, inPlan }) {
+  const reach = reachForRecord(record.id);
   return (
     <article className="survey-card" aria-label="Карточка выбранного объекта">
-      <a className="survey-photo-link" href={surveyPhoto(selected)} target="_blank" rel="noreferrer"
-        aria-label={`Открыть кадр объекта №${selected.id} в новой вкладке`}>
-        <img src={surveyPhoto(selected)} alt={`Кадр из отчёта с разметкой объекта №${selected.id}`} />
+      <a className="survey-photo-link" href={surveyPhoto(record)} target="_blank" rel="noreferrer"
+        aria-label={`Открыть кадр объекта №${record.id} в новой вкладке`}>
+        <img src={surveyPhoto(record)} alt={`Кадр из отчёта с разметкой объекта №${record.id}`} />
         <ArrowUpRight size={18} />
       </a>
       <div className="survey-card-copy" aria-live="polite">
-        <p className="survey-eyebrow">Объект №{selected.id}</p>
-        <h3>{selected.category}</h3>
+        <p className="survey-eyebrow">Объект №{record.id}</p>
+        <h3>{record.category}</h3>
         <dl>
-          <div><dt>Время съёмки</dt><dd>{selected.time}</dd></div>
-          <div><dt>Координаты (расчёт)</dt><dd>{coordinates(selected)}</dd></div>
-          <div><dt>Уверенность модели</dt><dd>{confidence(selected)}</dd></div>
-          <div><dt>Участок планирования</dt><dd>{reach.id} · {reach.name}</dd></div>
+          <div><dt>Координаты (расчёт)</dt><dd>{coordinates(record)}</dd></div>
+          <div><dt>Время съёмки</dt><dd>{record.time.slice(11)}</dd></div>
+          <div><dt>Уверенность модели</dt><dd>{confidence(record)}</dd></div>
+          <div><dt>Участок</dt><dd>{reach.id} · {reach.name}</dd></div>
         </dl>
-        {onPlan && (
-          <button className="survey-add-to-plan" type="button" onClick={() => onPlan(reach.id)}>
-            <ClipboardList size={16} /> Участок {reach.id} в план
-          </button>
-        )}
+        <button className="survey-add-to-plan" type="button" disabled={inPlan} onClick={() => onPlan(reach.id)}>
+          {inPlan ? <Check size={16} /> : <ClipboardList size={16} />}
+          {inPlan ? `Участок ${reach.id} в плане` : `Участок ${reach.id} в план`}
+        </button>
       </div>
     </article>
   );
 }
 
-export default function Survey({ selectedId, onSelect, onShow, onPlan }) {
-  const selected = records.find(({ id }) => id === selectedId);
+function downloadCsv() {
+  const header = "ID;Класс объекта;Расчётная широта;Расчётная долгота;Участок;Уверенность модели (0–1)";
+  const rows = records.map((record) => [
+    record.id, record.category, record.lat, record.lon, reachForRecord(record.id).id, record.confidence,
+  ].join(";"));
+  const url = URL.createObjectURL(new Blob(["\uFEFF" + [header, ...rows].join("\n")], { type: "text/csv;charset=utf-8;" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "RIVER-lyutoga.csv";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function SurveyRegistry({ selectedId, onSelect }) {
+  const viewport = useRef(null);
+  const activeRow = useRef(null);
+  useLayoutEffect(() => {
+    const list = viewport.current;
+    const row = activeRow.current.getBoundingClientRect();
+    const bounds = list.getBoundingClientRect();
+    const headerBottom = list.querySelector("thead th").getBoundingClientRect().bottom;
+    if (row.top < headerBottom) list.scrollTop += row.top - headerBottom;
+    else if (row.bottom > bounds.bottom - 1) list.scrollTop += row.bottom - bounds.bottom + 1;
+  }, [selectedId]);
+
   return (
-    <section id="survey" className="survey-section section" aria-labelledby="survey-title">
-      <div className="section-heading survey-heading">
+    <div className="survey-registry">
+      <div className="survey-registry-heading">
+        <h3 id="survey-registry-title">Объекты из отчёта <span>{records.length}</span></h3>
         <div>
-          <p className="survey-eyebrow">Материалы обследования · 2 июля 2025</p>
-          <h2 id="survey-title">Пример обследования</h2>
+          <button type="button" onClick={downloadCsv} aria-label="Скачать данные отчёта (CSV)">CSV</button>
+          <a href="/media/survey/client_report.xlsx" download aria-label="Скачать отчёт Excel">
+            <FileDown size={15} /> Excel
+          </a>
         </div>
-        <p>22 записи из отчёта. Выберите точку на карте или строку в таблице, чтобы открыть карточку объекта.</p>
       </div>
-      <div className="survey-actions">
-        <a href="/media/survey/client_report.xlsx" download><FileDown size={18} /> Скачать отчёт Excel</a>
-        <button type="button" onClick={onShow}><Play size={17} /> Смотреть автопоказ · {showDuration} сек.</button>
-      </div>
-
-      <details className="survey-video" onToggle={(event) => {
-        if (!event.currentTarget.open) event.currentTarget.querySelector("video").pause();
-      }}>
-        <summary><Video size={18} /> Видео с разметкой завалов · 27 сек.</summary>
-        <video src={segmentationVideo.src} poster={segmentationVideo.poster}
-          aria-label="Аэросъёмка реки с масками обнаруженных древесных завалов"
-          controls playsInline preload="none" />
-      </details>
-
-      <div className="survey-layout">
-        <div id="survey-map-panel" className="survey-map-panel" tabIndex={-1}>
-          <SurveyMap selectedId={selectedId} onSelect={onSelect} />
-          <p className="survey-map-caption">
-            <span><MapPin size={16} /> Расчётные координаты из отчёта</span>
-            <span><i aria-hidden="true" /> Русло</span>
-            <span><i className="survey-road-key" aria-hidden="true" /> Дороги</span>
-          </p>
-        </div>
-        <SurveyObjectCard record={selected} onPlan={onPlan} />
-      </div>
-      <p className="survey-note">Точки нанесены по расчётным координатам из отчёта. Их точность в отчёте не указана. Решение о расчистке принимается после оценки участка.</p>
-
-      <div className="survey-table-scroll" tabIndex={0} role="region" aria-label="Таблица объектов обследования">
-        <table className="survey-table">
-          <caption>Объекты из отчёта</caption>
-          <thead><tr><th scope="col">ID</th><th scope="col">Класс объекта</th><th scope="col">Время съёмки</th><th scope="col">Координаты (расчёт)</th><th scope="col">Уверенность модели</th></tr></thead>
+      <div ref={viewport} className="survey-table-scroll" tabIndex={0}
+        role="region" aria-labelledby="survey-registry-title">
+        <table className="survey-table" aria-labelledby="survey-registry-title">
+          <thead><tr><th scope="col">№</th><th scope="col">Расположение</th><th scope="col">Участок</th><th scope="col">Уверенность</th></tr></thead>
           <tbody>
-            {records.map((record) => (
-              <tr key={record.id} className={record.id === selectedId ? "is-selected" : ""} onClick={() => onSelect(record.id)}>
-                <th scope="row">
-                  <button type="button" onClick={(event) => {
-                    event.stopPropagation();
-                    onSelect(record.id);
-                  }} aria-label={`Показать объект №${record.id} на карте`} aria-pressed={record.id === selectedId}>
-                    {record.id}
-                  </button>
-                </th>
-                <td>{record.category}</td><td>{record.time.slice(11)}</td><td>{coordinates(record)}</td><td>{confidence(record)}</td>
-              </tr>
-            ))}
+            {records.map((record) => {
+              const active = record.id === selectedId;
+              return (
+                <tr key={record.id} ref={active ? activeRow : null} className={active ? "is-selected" : ""} onClick={() => onSelect(record.id)}>
+                  <th scope="row">
+                    <button type="button" onClick={(event) => {
+                      event.stopPropagation();
+                      onSelect(record.id);
+                    }} aria-label={`Показать объект №${record.id} на карте`} aria-pressed={active}>
+                      {record.id}
+                    </button>
+                  </th>
+                  <td>{isOnBank(record) ? "Берег / отмель" : "В воде"}</td>
+                  <td>{reachForRecord(record.id).id}</td><td>{confidence(record)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function SurveyWorkspace({ selectedReaches, toggleReach, addReach }) {
+  const [selectedId, setSelectedId] = useState(featuredRecord.id);
+  const [zoomIndex, setZoomIndex] = useState(0);
+  const [showContext, setShowContext] = useState(true);
+  const [showRecords, setShowRecords] = useState(true);
+  const [showFlight, setShowFlight] = useState(true);
+  const [flightPlaying, setFlightPlaying] = useState(() => !matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [flightRun, setFlightRun] = useState(0);
+  const record = records.find(({ id }) => id === selectedId);
+
+  function selectRecord(id) {
+    setSelectedId(id);
+    setShowRecords(true);
+  }
+
+  return (
+    <div className="survey-layout">
+      <div id="survey-map-panel" className="demo-map-panel" aria-label="Дефектовка древесных завалов">
+        <div className="survey-map-heading">
+          <h3>Дефектовка завалов</h3>
+          <a href="#planner">План выезда <ArrowUpRight size={15} /></a>
+        </div>
+        <SurveyMap selectedId={selectedId} onSelect={selectRecord} zoom={zoomLevels[zoomIndex]}
+          showContext={showContext} showRecords={showRecords} selectedReachIds={selectedReaches} onToggleReach={toggleReach}>
+          {showFlight && <SurveyDemoFlight playing={flightPlaying} run={flightRun} />}
+        </SurveyMap>
+        <div className="demo-map-controls" role="group" aria-label="Управление картой">
+          <button type="button" aria-label="Приблизить" title="Приблизить"
+            disabled={zoomIndex === zoomLevels.length - 1}
+            onClick={() => setZoomIndex(zoomIndex + 1)}><Plus size={17} /></button>
+          <button type="button" aria-label="Отдалить" title="Отдалить" disabled={zoomIndex === 0}
+            onClick={() => setZoomIndex(zoomIndex - 1)}><Minus size={17} /></button>
+          <button type="button" aria-label="Сбросить масштаб" title="Сбросить масштаб" disabled={zoomIndex === 0}
+            onClick={() => setZoomIndex(0)}><RotateCcw size={16} /></button>
+          <button type="button" aria-label="Дороги, здания и лес" title="Дороги, здания и лес"
+            aria-pressed={showContext} onClick={() => setShowContext(!showContext)}><Layers size={17} /></button>
+          <button type="button" aria-label="Точки обследования" title="Точки обследования"
+            aria-pressed={showRecords} onClick={() => setShowRecords(!showRecords)}><MapPin size={17} /></button>
+          <button type="button" className="demo-flight-toggle" aria-pressed={showFlight}
+            onClick={() => setShowFlight(!showFlight)}><Route size={17} /> Маршрут БПЛА</button>
+          {showFlight && (
+            <>
+              <button type="button" aria-label={flightPlaying ? "Пауза пролёта" : "Продолжить пролёт"}
+                title={flightPlaying ? "Пауза пролёта" : "Продолжить пролёт"}
+                onClick={() => setFlightPlaying(!flightPlaying)}>
+                {flightPlaying ? <Pause size={17} /> : <Play size={17} />}
+              </button>
+              <button type="button" aria-label="Повторить пролёт с начала" title="Повторить пролёт с начала"
+                onClick={() => {
+                  setFlightRun((run) => run + 1);
+                  setFlightPlaying(true);
+                }}><RotateCcw size={17} /></button>
+            </>
+          )}
+        </div>
+        <div className="demo-map-key" aria-label="Обозначения карты">
+          {showFlight && <span><i className="demo-key-flight" aria-hidden="true" /> Условная траектория БПЛА</span>}
+          {showRecords && (
+            <>
+              <span><i aria-hidden="true" /> В воде · {records.length - bankCount}</span>
+              <span><i className="demo-key-bank" aria-hidden="true" /> На берегу или отмели · {bankCount}</span>
+            </>
+          )}
+        </div>
+        <p className="survey-map-note">Точки нанесены по расчётным координатам из отчёта. Точность в отчёте не указана.</p>
+      </div>
+      <div className="survey-inspector">
+        <SurveyObjectCard record={record} onPlan={addReach} inPlan={selectedReaches.includes(reachForRecord(record.id).id)} />
+        <SurveyRegistry selectedId={selectedId} onSelect={selectRecord} />
+      </div>
+    </div>
+  );
+}
+
+export default function Survey({ onShow }) {
+  return (
+    <section id="survey" className="survey-section section" aria-labelledby="survey-title">
+      <div id="demo" className="section-kicker">03 / ИНТЕРАКТИВНАЯ ДЕМОНСТРАЦИЯ</div>
+      <div className="section-heading survey-heading">
+        <div>
+          <p className="survey-eyebrow">Лютога · 2 июля 2025</p>
+          <h2 id="survey-title">Пример обследования</h2>
+        </div>
+        <p>Выберите завал на карте или в реестре, просмотрите кадр из отчёта и добавьте участок в план выезда.</p>
+      </div>
+      <div className="survey-actions">
+        <a href="#planner"><ClipboardList size={17} /> План выезда</a>
+        <button type="button" onClick={onShow}><Play size={17} /> Автопрезентация сайта</button>
+      </div>
+      <details id="survey-footage" className="survey-video" onToggle={(event) => {
+        if (!event.currentTarget.open) event.currentTarget.querySelector("video").pause();
+      }}>
+        <summary><Video size={17} /> Видео с разметкой завалов · 27 сек.</summary>
+        <video src={segmentationVideo.src} poster={segmentationVideo.poster}
+          aria-label="Аэросъёмка реки с масками обнаруженных древесных завалов"
+          controls muted playsInline preload="none" />
+        <a href="#video">Сравнить режимы обработки <ArrowUpRight size={15} /></a>
+      </details>
+      <Planner renderSurvey={(plan) => <SurveyWorkspace {...plan} />} />
     </section>
   );
 }
