@@ -15,16 +15,19 @@ import {
 const checkpointDetails = [
   {
     id: "1",
+    photoKey: "A",
     title: "Начало облёта",
     text: "Посмотрите, как модель выделяет древесину на береговой линии.",
   },
   {
     id: "2",
+    photoKey: "B",
     title: "Обзор излучины",
     text: "Смена ракурса показывает, почему наблюдения нужно связывать между кадрами.",
   },
   {
     id: "3",
+    photoKey: "C",
     title: "Продолжение маршрута",
     text: "Оцените результат на следующих кадрах обследования.",
   },
@@ -42,9 +45,6 @@ const modes = {
   },
 };
 
-function checkpointPhoto(mode, id) {
-  return `/media/checkpoint-${mode}-${id}.jpg`;
-}
 export default function Mission() {
   const [expanded, setExpanded] = useState(false);
   const section = useRef(null);
@@ -60,7 +60,11 @@ export default function Mission() {
   const video = useRef(null),
     target = useRef(0);
   const clip = modes[mode];
-  const checkpoints = checkpointDetails.map((point, i) => ({ ...point, time: clip.times[i] }));
+  const checkpoints = checkpointDetails.map((point, i) => ({
+    ...point,
+    time: clip.times[i],
+    photo: `/media/checkpoint-${mode}-${point.photoKey}.jpg`,
+  }));
   const point = checkpoints[index];
   const note = drafts[point.id]?.note || "";
   const status = drafts[point.id]?.status || "Требует осмотра";
@@ -326,7 +330,7 @@ export default function Mission() {
                 controls
                 playsInline
                 preload="metadata"
-                poster={checkpointPhoto(mode, "A")}
+                poster={checkpoints[0].photo}
                 aria-label="Видео обследования реки"
                 onLoadedMetadata={(e) => {
                   setDuration(e.currentTarget.duration);
@@ -381,7 +385,7 @@ export default function Mission() {
                     onClick={() => jump(i)}
                     aria-pressed={i === index}
                   >
-                    <img src={checkpointPhoto(mode, p.id)} alt="" />
+                    <img src={p.photo} alt="" />
                     <span>
                       {stamp(p.time)}
                       <b>{p.title}</b>
@@ -486,7 +490,7 @@ export default function Mission() {
             <ArrowUpRight size={16} />
           </button>
           <small className="mission-footnote">
-            Участок для выезда можно выбрать из карточки объекта на карте.
+            На карте можно проверить завал и добавить объект в план устранения.
           </small>
         </aside>
       </div>

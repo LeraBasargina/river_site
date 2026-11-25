@@ -83,8 +83,8 @@ function App() {
         <nav className={menu ? "open" : ""}>
           {[
             ["#about", "О проекте"],
-            ["#survey", "Обследование"],
             ["#video", "Видео"],
+            ["#survey", "Обследование"],
             ["#planner", "План устранения"],
           ].map(([href, label]) => (
             <a key={href} href={href} onClick={() => setMenu(false)}>
@@ -130,7 +130,7 @@ function App() {
               помогает исследовать реки с помощью компьютерного зрения.
             </p>
             <div className="hero-actions">
-              <a className="button primary" href="#demo">
+              <a className="button primary" href="#video">
                 Посмотреть в действии <ArrowUpRight size={18} />
               </a>
               <a className="text-link" href="#planner">
@@ -243,9 +243,9 @@ function App() {
             ))}
           </div>
         </section>
-        <Survey onPresentationOpen={closeShow} />
         <Mission />
         <TrackingDemo />
+        <Survey onPresentationOpen={closeShow} />
         <section id="results" className="results section">
           <div className="section-kicker">04 / РЕЗУЛЬТАТЫ ОБРАБОТКИ</div>
           <div className="section-heading">

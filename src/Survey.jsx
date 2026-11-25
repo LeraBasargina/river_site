@@ -389,13 +389,13 @@ export default function Survey({ onPresentationOpen }) {
       <div className="survey-actions">
         <a href="#planner"><ClipboardList size={17} /> План устранения</a>
         <button type="button" ref={presentationTrigger} aria-haspopup="dialog" onClick={playPresentation}>
-          <Play size={17} /> Автопрезентация · 90 сек.
+          <Play size={17} /> Смотреть ролик · 90 сек.
         </button>
       </div>
       <dialog ref={presentation} className="survey-presentation" aria-labelledby="survey-presentation-title"
         onClose={closePresentation}>
         <div className="survey-presentation-bar">
-          <h3 id="survey-presentation-title">Автопрезентация обследования</h3>
+          <h3 id="survey-presentation-title">Ролик об обследовании</h3>
           <button type="button" autoFocus onClick={() => presentation.current.close()}>К карте</button>
         </div>
         <video ref={presentationVideo} src="/media/RIVER-AIJ-2026.mp4" poster="/media/survey-intro-poster.jpg"

@@ -3,13 +3,14 @@ import { ArrowLeft, ArrowRight, Maximize, Pause, Play, X } from "lucide-react";
 import "./styles/auto-show.css";
 
 const stops = [
-  { target: "intro", title: "RIVER", seconds: 7 },
-  { target: "about", title: "О проекте", seconds: 7 },
-  { target: "workflow", title: "Принцип работы", seconds: 7 },
-  { target: "survey-footage", title: "Видео обследования", seconds: 15 },
+  { target: "intro", title: "RIVER", seconds: 6 },
+  { target: "about", title: "О проекте", seconds: 6 },
+  { target: "workflow", title: "Принцип работы", seconds: 6 },
+  { target: "video", title: "От кадра к плану", seconds: 7 },
+  { target: "tracking-demo", title: "Объединение наблюдений", seconds: 8 },
+  { target: "survey-footage", title: "Видео обследования", seconds: 11 },
   { target: "survey-map-panel", title: "Дефектовка и реестр", seconds: 18 },
   { target: "planner", title: "План устранения", seconds: 14 },
-  { target: "tracking-demo", title: "Объединение наблюдений", seconds: 8 },
   { target: "results", title: "Результаты", seconds: 7 },
   { target: "closing", title: "Сахалинский центр ИИ", seconds: 7 },
 ];

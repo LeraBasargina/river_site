@@ -35,6 +35,13 @@ const fs = require("node:fs");
   const stand = p.locator("#survey");
   const surveyMap = stand.locator("#survey-map-panel");
   const registry = stand.getByRole("region", { name: /Объекты из отчёта/ });
+  if (!(await p.evaluate(() => {
+    const ids = ["video", "tracking-demo", "survey", "planner"];
+    return ids.slice(1).every((id, i) =>
+      document.getElementById(ids[i]).compareDocumentPosition(document.getElementById(id)) &
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+  }))) throw Error("The video and tracking walkthrough must precede the survey and plan");
   if (await p.locator("main .survey-map").count() !== 1)
     throw Error("The page must use a single survey map");
   if (await stand.getByRole("tablist").count()) throw Error("Legacy processing tabs are still visible");
@@ -135,11 +142,20 @@ const fs = require("node:fs");
   });
   if (!(await video.locator("source").getAttribute("src")).endsWith("survey-segmentation.mp4"))
     throw Error("Contour mode did not use the new source");
+  const checkThumbnails = (mode) => p.waitForFunction((mode) => {
+    const images = [...document.querySelectorAll("#video .checkpoint-row img")];
+    return images.length === 3 && images.every((image, index) =>
+      image.currentSrc.endsWith(`checkpoint-${mode}-${"ABC"[index]}.jpg`) &&
+      image.complete && image.naturalWidth > 0
+    );
+  }, mode);
+  await checkThumbnails("segmentation");
   await mission.getByRole("button", { name: "Детекция рамками" }).click();
   await p.waitForFunction(() => {
     const player = document.querySelector("#video video");
     return player?.readyState >= 1 && Math.abs(player.currentTime - 24) < 0.15;
   });
+  await checkThumbnails("detection");
   await surveyMap.locator(".survey-layer-water path").first().waitFor();
   await surveyMap.locator(".survey-layer-roads path").first().waitFor();
   await surveyMap.locator(".survey-layer-buildings path").first().waitFor();
@@ -248,8 +264,8 @@ const fs = require("node:fs");
     throw Error("JSON export must include only the explicitly chosen objects and their notes");
   await p.reload();
   if (await plannedObjects.count() !== 2) throw Error("Saved removal decisions did not restore");
-  const presentation = p.getByRole("dialog", { name: "Автопрезентация обследования" });
-  const watchPresentation = p.getByRole("button", { name: "Автопрезентация · 90 сек." });
+  const presentation = p.getByRole("dialog", { name: "Ролик об обследовании" });
+  const watchPresentation = stand.getByRole("button", { name: "Смотреть ролик · 90 сек." });
   await watchPresentation.click();
   await presentation.waitFor();
   await p.waitForFunction(() => {
@@ -278,13 +294,17 @@ const fs = require("node:fs");
   const next = show.getByRole("button", { name: "Следующий экран" });
   await next.click();
   await next.click();
+  await show.getByText("От кадра к плану", { exact: true }).waitFor();
+  await next.click();
+  await show.getByText("Объединение наблюдений", { exact: true }).waitFor();
+  await next.click();
   await p.locator("#survey-footage[open]").waitFor();
   await next.click();
   await show.getByText("Дефектовка и реестр", { exact: true }).waitFor();
   await p.waitForFunction(() => document.querySelector("#survey-map-panel").getBoundingClientRect().top < 175);
   await next.click();
   await show.getByText("План устранения", { exact: true }).waitFor();
-  for (let i = 0; i < 4; i += 1) await next.click();
+  for (let i = 0; i < 3; i += 1) await next.click();
   await show.getByText("RIVER", { exact: true }).waitFor();
   await p.keyboard.press("Escape");
   await show.waitFor({ state: "detached" });
