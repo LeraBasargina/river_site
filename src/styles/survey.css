@@ -305,44 +305,58 @@
   background: #ffdcac;
   box-shadow: 0 0 0 5px #ffdcac38, 0 0 24px #ffdcac60;
 }
-.survey-pin.is-in-plan span {
-  border-color: #edf8cc;
-  background: #d9eea9;
-  box-shadow: 0 0 0 3px #d9eea95e;
+.survey-pin.is-in-plan span,
+.demo-map-key .demo-key-plan {
+  box-shadow: 0 0 0 2px #82e8f1;
 }
+.survey-pin.is-kept.is-on-bank span,
+.survey-pin.is-kept span,
+.demo-map-key .demo-key-kept {
+  background: #263d35;
+  border: 1px dashed #e1e8e3;
+}
+.survey-pin.is-selected.is-in-plan { outline: 2px solid #82e8f1; }
+.survey-pin.is-selected.is-kept { outline: 2px dashed #edf4ed; }
 .survey-reach-marker {
   position: absolute;
-  z-index: 3;
+  z-index: 1;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  transform: translate(14px, -50%);
+  width: 30px;
+  height: 29px;
+  transform: translate(calc(-100% - 11px), -100%);
   border: 1px solid #a0b8a8;
   border-radius: 7px;
   background: #183b32;
   color: #edf4ea;
+  font-size: .8rem;
   font-weight: 750;
+  pointer-events: none;
 }
-.survey-reach-marker[aria-pressed="true"] {
-  border-color: #e9f7c8;
-  background: #d9eea9;
-  color: #18352a;
+.survey-object-decisions { margin-top: 12px; }
+.survey-object-decisions p {
+  margin: 0 0 8px;
+  color: var(--survey-secondary);
+  font-size: .8rem;
 }
-.survey-add-to-plan {
+.survey-object-decisions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.survey-object-decisions button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  margin-top: 15px;
-  border: 1px solid #aec57f;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--survey-border);
   border-radius: 6px;
-  background: #d9eea9;
-  color: #203d28;
-  font-size: .82rem;
+  background: transparent;
+  font-size: .8rem;
   font-weight: 650;
 }
+.survey-object-decisions button[aria-pressed="true"] { border-color: currentColor; }
+.survey-object-decisions .survey-add-to-plan { background: #d9eea9; color: #203d28; }
 .survey-photo-preview {
   position: relative;
   display: block;
@@ -508,8 +522,6 @@
   padding: clamp(12px, 1.2vw, 16px);
 }
 .survey-card-copy { padding-top: clamp(13px, 1.3vw, 17px); }
-.survey-add-to-plan { margin-top: 10px; }
-.survey-add-to-plan:disabled { cursor: default; background: transparent; color: var(--survey-text); }
 .survey-registry-heading { padding: 11px 12px; }
 .survey-registry-heading h3 span { color: var(--survey-secondary); font-size: .84em; font-variant-numeric: tabular-nums; }
 .survey-registry-heading > div { display: flex; gap: 10px; }
@@ -536,9 +548,6 @@
 .survey-table th, .survey-table td { padding: 7px 9px; font-size: .77rem; }
 .survey-table tbody td:nth-child(n+3) { text-align: center; }
 .survey-table thead th:nth-child(n+3) { text-align: center; }
-.survey-reach-marker { transform: translate(calc(-100% - 11px), -100%); }
-.survey-reach-marker[aria-pressed="true"] { background: #d9eea9; }
-.survey-pin.is-on-bank.is-in-plan span { background: #f0b872; }
 .survey-planner { margin-top: 25px; }
 .survey-planner-heading {
   display: flex;
@@ -561,4 +570,62 @@
 }
 @media (max-width: 435px) {
   .survey-table th, .survey-table td { padding-inline: 5px; font-size: .74rem; }
+}
+
+
+.plan-object-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-object {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--survey-border);
+  border-radius: 8px;
+  background: var(--survey-surface);
+  color: var(--survey-text);
+  font-size: .88rem;
+}
+.plan-object-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.plan-object-heading button {
+  display: grid;
+  place-items: center;
+  width: 33px;
+  height: 33px;
+  border: 1px solid var(--survey-border);
+  border-radius: 6px;
+  background: transparent;
+}
+.plan-object small { color: var(--survey-secondary); font-variant-numeric: tabular-nums; }
+.plan-object .field-label { gap: 5px; margin: 5px 0 0; }
+.plan-object textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  resize: vertical;
+  border: 1px solid var(--survey-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--survey-text);
+  font: inherit;
+}
+.plan-empty { font-size: .9rem; color: var(--survey-secondary); }
+.plan-map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  font-size: .8rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

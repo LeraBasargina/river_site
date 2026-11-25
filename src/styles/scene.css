@@ -1,12 +1,3 @@
-.reach-card {
-  transition:
-    background 0.25s,
-    border-color 0.25s,
-    transform 0.25s;
-}
-.reach-card:hover {
-  transform: translateX(3px);
-}
 [data-theme="dark"] {
   --line: #243344;
   --green: #35e0cf;
@@ -32,14 +23,6 @@
 [data-theme="dark"] .planner-workspace {
   background: #0b1421;
   border-color: #273a4e;
-}
-[data-theme="dark"] .reach-card {
-  background: #0f1d2c;
-  border-color: #253c4d;
-}
-[data-theme="dark"] .reach-check {
-  background: #143943;
-  color: #6de3db;
 }
 [data-theme="dark"] .hero-copy > p,
 [data-theme="dark"] .section-heading > p,
@@ -84,14 +67,6 @@
 [data-theme="dark"] .future-list article > svg {
   color: #63b8df;
 }
-[data-theme="dark"] .reach-card.selected {
-  background: linear-gradient(110deg, #12343e, #112435);
-  border-color: #339795;
-}
-[data-theme="dark"] .reach-card.selected .reach-check {
-  background: #35cfc0;
-  color: #06212a;
-}
 [data-theme="dark"] .field-label input,
 [data-theme="dark"] .field-label select {
   background: #101e2d;
@@ -100,9 +75,7 @@
 }
 [data-theme="dark"] .field-label,
 [data-theme="dark"] .planner-hint,
-[data-theme="dark"] .reach-card small,
-[data-theme="dark"] .plan-summary span,
-[data-theme="dark"] .route-preview small {
+[data-theme="dark"] .plan-summary span {
   color: #8da8bb;
 }
 [data-theme="dark"] .plan-summary strong {

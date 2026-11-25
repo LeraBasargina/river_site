@@ -33,10 +33,10 @@ export default function PrintPlan({ plan, onClose }) {
           <div className="paper-brand">
             RIVER <span>ПОЛЕВОЙ ПЛАН / УЧЕБНЫЙ СЦЕНАРИЙ</span>
           </div>
-          <h1 id="print-plan-title">План выезда</h1>
+          <h1 id="print-plan-title">План устранения завалов</h1>
           <p className="paper-warning">
             План по материалам обследования Лютоги от 2 июля 2025 года.
-            Участки группируют расчётные точки отчёта.
+            Включены объекты, выбранные специалистом при проверке.
           </p>
           <dl className="paper-details">
             <div>
@@ -49,40 +49,26 @@ export default function PrintPlan({ plan, onClose }) {
             </div>
             <div>
               <dt>Задача</dt>
-              <dd>{plan.task}</dd>
-            </div>
-            <div>
-              <dt>Порядок в плане</dt>
-              <dd>{plan.chosen.map((r) => r.id).join(" → ")}</dd>
+              <dd>Устранение выбранных древесных завалов</dd>
             </div>
           </dl>
           <div className="paper-totals">
             <span>
-              <b>{plan.chosen.length}</b> участков
-            </span>
-            <span>
-              <b>{plan.objectCount}</b> объектов из отчёта
+              <b>{plan.chosen.length}</b> объектов к устранению
             </span>
           </div>
-          <h2>Участки и наблюдения</h2>
-          {plan.chosen.map((r, i) => (
-            <section className="paper-reach" key={r.id}>
-              <h3>
-                {i + 1}. Участок {r.id} — {r.name}
-              </h3>
-              <p>
-                {r.recordIds.length} объектов из отчёта · № {r.first}–{r.last}
-              </p>
-              <p>
-                <b>Статус:</b> {plan.observations[r.id]?.status || "Не задан"}
-              </p>
-              <div className="paper-note">
-                <b>Заметка:</b>
-                <p>
-                  {plan.observations[r.id]?.note ||
-                    "Нет заметки. Уточнить условия на месте."}
-                </p>
-              </div>
+          <h2>Объекты в плане</h2>
+          {plan.chosen.map((object) => (
+            <section className="paper-object" key={object.id}>
+              <h3>Объект №{object.id} · {object.category}</h3>
+              <p>Участок {object.section_id} · {object.section}</p>
+              <p>Расчётные координаты · {object.lat.toFixed(7)}, {object.lon.toFixed(7)}</p>
+              {object.note && (
+                <div className="paper-note">
+                  <b>Заметка</b>
+                  <p>{object.note}</p>
+                </div>
+              )}
             </section>
           ))}
           <h2>Перед выездом</h2>

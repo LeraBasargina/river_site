@@ -6,9 +6,10 @@ import {
 import Planner from "./Planner";
 import ImageViewer from "./ImageViewer";
 import { segmentationVideo } from "./lib/river-video";
-import records from "./lib/survey-data.json";
+import records from "./lib/survey-data.json" with { type: "json" };
 import basemap from "./lib/survey-basemap.json";
 import { planningReaches, reachForRecord } from "./lib/survey-reaches";
+import { DECISION_LABELS } from "./lib/plan-storage";
 import "./styles/survey.css";
 
 const { bounds } = basemap;
@@ -95,8 +96,7 @@ function SurveyDemoFlight({ playing, run }) {
 function SurveyMap({
   selectedId,
   onSelect,
-  selectedReachIds = [],
-  onToggleReach,
+  decisions,
   zoom = 1,
   showRecords = true,
   showContext = true,
@@ -138,26 +138,23 @@ function SurveyMap({
         {showRecords && records.map((record) => {
           const selected = record.id === selectedId;
           const style = position(record);
-          const inPlan = selectedReachIds.includes(reachForRecord(record.id).id);
+          const decision = decisions[record.id]?.decision ?? "pending";
           const onBank = isOnBank(record);
-          const classes = `survey-pin${selected ? " is-selected" : ""}${inPlan ? " is-in-plan" : ""}${onBank ? " is-on-bank" : ""}`;
+          const classes = `survey-pin${selected ? " is-selected" : ""}${decision === "remove" ? " is-in-plan" : ""}${decision === "keep" ? " is-kept" : ""}${onBank ? " is-on-bank" : ""}`;
           return (
             <button key={record.id} type="button" className={classes} style={style}
               onClick={() => onSelect(record.id)} aria-label={`Объект №${record.id}`}
-              aria-pressed={selected} title={`Объект №${record.id}`}>
+              aria-pressed={selected} title={`Объект №${record.id} · ${DECISION_LABELS[decision]}`}>
               {selected ? record.id : <span aria-hidden="true" />}
             </button>
           );
         })}
         {planningReaches.map((reach) => (
-          <button key={reach.id} type="button" className="survey-reach-marker"
+          <span key={reach.id} className="survey-reach-marker"
             style={position(records.find(({ id }) => id === reach.markerId))}
-            aria-label={`Участок ${reach.id} на карте — ${reach.name}`}
-            aria-pressed={selectedReachIds.includes(reach.id)}
-            title={reach.name}
-            onClick={() => onToggleReach(reach.id)}>
+            title={reach.name}>
             {reach.id}
-          </button>
+          </span>
         ))}
       </div>
       <div aria-hidden="true" className="survey-north">↑ <span>С</span></div>
@@ -169,7 +166,7 @@ function SurveyMap({
   );
 }
 
-function SurveyObjectCard({ record, onPlan, inPlan }) {
+function SurveyObjectCard({ record, decision, onDecision }) {
   const reach = reachForRecord(record.id);
   const [photoOpen, setPhotoOpen] = useState(false);
   const photo = surveyPhoto(record);
@@ -193,10 +190,21 @@ function SurveyObjectCard({ record, onPlan, inPlan }) {
           <div><dt>Уверенность модели</dt><dd>{confidence(record)}</dd></div>
           <div><dt>Участок</dt><dd>{reach.id} · {reach.name}</dd></div>
         </dl>
-        <button className="survey-add-to-plan" type="button" disabled={inPlan} onClick={() => onPlan(reach.id)}>
-          {inPlan ? <Check size={16} /> : <ClipboardList size={16} />}
-          {inPlan ? `Участок ${reach.id} в плане` : `Участок ${reach.id} в план`}
-        </button>
+        <div className="survey-object-decisions">
+          <p>Решение · <strong>{DECISION_LABELS[decision]}</strong></p>
+          <div role="group" aria-label={`Решение по объекту №${record.id}`}>
+            <button type="button" className="survey-add-to-plan" aria-pressed={decision === "remove"}
+              onClick={() => onDecision(record.id, "remove")}>
+              {decision === "remove" ? <Check size={16} /> : <ClipboardList size={16} />}
+              Объект в план
+            </button>
+            <button type="button" aria-pressed={decision === "keep"}
+              onClick={() => onDecision(record.id, "keep")}>Оставить</button>
+            {decision !== "pending" && (
+              <button type="button" onClick={() => onDecision(record.id, "pending")}>Вернуть на проверку</button>
+            )}
+          </div>
+        </div>
       </div>
       {photoOpen && (
         <ImageViewer title={`Объект №${record.id} · кадр из отчёта`} onClose={() => setPhotoOpen(false)}>
@@ -220,7 +228,7 @@ function downloadCsv() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function SurveyRegistry({ selectedId, onSelect }) {
+function SurveyRegistry({ selectedId, onSelect, decisions }) {
   const viewport = useRef(null);
   const activeRow = useRef(null);
   useLayoutEffect(() => {
@@ -246,10 +254,11 @@ function SurveyRegistry({ selectedId, onSelect }) {
       <div ref={viewport} className="survey-table-scroll" tabIndex={0}
         role="region" aria-labelledby="survey-registry-title">
         <table className="survey-table" aria-labelledby="survey-registry-title">
-          <thead><tr><th scope="col">№</th><th scope="col">Расположение</th><th scope="col">Участок</th><th scope="col">Уверенность</th></tr></thead>
+          <thead><tr><th scope="col">№</th><th scope="col">Расположение</th><th scope="col">Участок</th><th scope="col">Решение</th></tr></thead>
           <tbody>
             {records.map((record) => {
               const active = record.id === selectedId;
+              const decision = decisions[record.id]?.decision ?? "pending";
               return (
                 <tr key={record.id} ref={active ? activeRow : null} className={active ? "is-selected" : ""} onClick={() => onSelect(record.id)}>
                   <th scope="row">
@@ -261,7 +270,8 @@ function SurveyRegistry({ selectedId, onSelect }) {
                     </button>
                   </th>
                   <td>{isOnBank(record) ? "Берег / отмель" : "В воде"}</td>
-                  <td>{reachForRecord(record.id).id}</td><td>{confidence(record)}</td>
+                  <td>{reachForRecord(record.id).id}</td>
+                  <td title={DECISION_LABELS[decision]}>{decision === "remove" ? "В плане" : DECISION_LABELS[decision]}</td>
                 </tr>
               );
             })}
@@ -272,7 +282,7 @@ function SurveyRegistry({ selectedId, onSelect }) {
   );
 }
 
-function SurveyWorkspace({ selectedReaches, toggleReach, addReach }) {
+function SurveyWorkspace({ decisions, decide }) {
   const [selectedId, setSelectedId] = useState(featuredRecord.id);
   const [zoomIndex, setZoomIndex] = useState(0);
   const [showContext, setShowContext] = useState(true);
@@ -292,10 +302,10 @@ function SurveyWorkspace({ selectedReaches, toggleReach, addReach }) {
       <div id="survey-map-panel" className="demo-map-panel" aria-label="Дефектовка древесных завалов">
         <div className="survey-map-heading">
           <h3>Дефектовка завалов</h3>
-          <a href="#planner">План выезда <ArrowUpRight size={15} /></a>
+          <a href="#planner">План устранения <ArrowUpRight size={15} /></a>
         </div>
         <SurveyMap selectedId={selectedId} onSelect={selectRecord} zoom={zoomLevels[zoomIndex]}
-          showContext={showContext} showRecords={showRecords} selectedReachIds={selectedReaches} onToggleReach={toggleReach}>
+          showContext={showContext} showRecords={showRecords} decisions={decisions}>
           {showFlight && <SurveyDemoFlight playing={flightPlaying} run={flightRun} />}
         </SurveyMap>
         <div className="demo-map-controls" role="group" aria-label="Управление картой">
@@ -333,14 +343,16 @@ function SurveyWorkspace({ selectedReaches, toggleReach, addReach }) {
             <>
               <span><i aria-hidden="true" /> В воде · {records.length - bankCount}</span>
               <span><i className="demo-key-bank" aria-hidden="true" /> На берегу или отмели · {bankCount}</span>
+              <span><i className="demo-key-plan" aria-hidden="true" /> В плане устранения</span>
+              <span><i className="demo-key-kept" aria-hidden="true" /> Оставить</span>
             </>
           )}
         </div>
         <p className="survey-map-note">Точки нанесены по расчётным координатам из отчёта. Точность в отчёте не указана.</p>
       </div>
       <div className="survey-inspector">
-        <SurveyObjectCard record={record} onPlan={addReach} inPlan={selectedReaches.includes(reachForRecord(record.id).id)} />
-        <SurveyRegistry selectedId={selectedId} onSelect={selectRecord} />
+        <SurveyObjectCard record={record} decision={decisions[record.id]?.decision ?? "pending"} onDecision={decide} />
+        <SurveyRegistry selectedId={selectedId} onSelect={selectRecord} decisions={decisions} />
       </div>
     </div>
   );
@@ -372,10 +384,10 @@ export default function Survey({ onPresentationOpen }) {
           <p className="survey-eyebrow">Лютога · 2 июля 2025</p>
           <h2 id="survey-title">Пример обследования</h2>
         </div>
-        <p>Выберите завал на карте или в реестре, просмотрите кадр из отчёта и добавьте участок в план выезда.</p>
+        <p>Проверьте каждый завал по кадру из отчёта. Добавьте объект в план устранения или отметьте, что его следует оставить.</p>
       </div>
       <div className="survey-actions">
-        <a href="#planner"><ClipboardList size={17} /> План выезда</a>
+        <a href="#planner"><ClipboardList size={17} /> План устранения</a>
         <button type="button" ref={presentationTrigger} aria-haspopup="dialog" onClick={playPresentation}>
           <Play size={17} /> Автопрезентация · 90 сек.
         </button>

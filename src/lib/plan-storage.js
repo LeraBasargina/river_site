@@ -1,18 +1,21 @@
-import { planningReaches } from "./survey-reaches.js";
+import records from "./survey-data.json" with { type: "json" };
+import { reachForRecord } from "./survey-reaches.js";
 
-export const PLAN_STORAGE_KEY = "river-field-plan:lyutoga-2025-07-02";
+export const PLAN_STORAGE_KEY = "river-removal-plan:lyutoga-2025-07-02";
+const legacyKeys = ["river-field-plan:lyutoga-2025-07-02", "river-field-plan"];
+
 export const TEAMS = ["Бригада № 1", "Бригада № 2", "Исследовательская группа"];
-export const TASKS = [
-  "Обследование и оценка расчистки",
-  "Расчистка согласованных участков",
-  "Повторная съёмка и мониторинг",
-];
 export const STATUSES = [
   "Требует осмотра",
   "Наблюдать в динамике",
   "Передать специалисту",
 ];
-const ids = planningReaches.map(({ id }) => id);
+export const DECISION_LABELS = {
+  pending: "На проверке",
+  remove: "В плане устранения",
+  keep: "Оставить",
+};
+
 export function validDate(value) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
     return false;
@@ -21,35 +24,49 @@ export function validDate(value) {
     !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
   );
 }
+
 export function normalizePlan(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const observations = {};
-  for (const id of ids) {
-    const item = value.observations?.[id];
-    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
-    observations[id] = {
-      note: typeof item.note === "string" ? item.note.slice(0, 600) : "",
-      status: STATUSES.includes(item.status) ? item.status : "",
-    };
+  const decisions = {};
+  for (const { id } of records) {
+    const item = value.decisions?.[id];
+    if (typeof item?.decision !== "string" || !Object.hasOwn(DECISION_LABELS, item.decision)) continue;
+    const note = typeof item.note === "string" ? item.note.slice(0, 600) : "";
+    if (item.decision !== "pending" || note) decisions[id] = { decision: item.decision, note };
   }
   return {
-    selected: Array.isArray(value.selected)
-      ? ids.filter((id) => value.selected.includes(id))
-      : [],
+    decisions,
     date: validDate(value.date) ? value.date : "",
     team: TEAMS.includes(value.team) ? value.team : TEAMS[0],
-    task: TASKS.includes(value.task) ? value.task : TASKS[0],
-    observations,
   };
 }
+
 export function readPlan(storage) {
   try {
     const saved = storage.getItem(PLAN_STORAGE_KEY);
     if (saved !== null) return normalizePlan(JSON.parse(saved));
-    const previous = normalizePlan(JSON.parse(storage.getItem("river-field-plan")));
-    // The old A–C labels and notes belonged to a fictitious route.
-    return previous && { ...previous, selected: [], observations: {} };
+    for (const key of legacyKeys) {
+      const previous = normalizePlan(JSON.parse(storage.getItem(key)));
+      if (previous) return { ...previous, decisions: {} };
+    }
+    return null;
   } catch {
     return null;
   }
+}
+
+export function removalObjects(decisions) {
+  return records.filter(({ id }) => decisions[id]?.decision === "remove")
+    .map(({ id, lat, lon, category }) => {
+      const reach = reachForRecord(id);
+      return {
+        id,
+        category,
+        lat,
+        lon,
+        section_id: reach.id,
+        section: reach.name,
+        note: decisions[id].note,
+      };
+    });
 }

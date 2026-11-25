@@ -1104,7 +1104,7 @@ header nav {
   overflow: hidden;
   background: #fff;
 }
-.reach-panel,
+.plan-object-panel,
 .trip-form {
   padding: 24px;
 }
@@ -1143,67 +1143,12 @@ header nav {
   border-radius: 4px;
   color-scheme: light;
 }
-.reach-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.reach-card {
-  background: #fafbf6;
-  display: flex;
-  border: 1px solid #e1e7da;
-  border-radius: 6px;
-  text-align: left;
-  padding: 15px 12px;
-  gap: 10px;
-  align-items: flex-start;
-  width: 100%;
-}
-.reach-card.selected {
-  background: #edf4e0;
-  border-color: #8fa76a;
-}
-.reach-check {
-  display: grid;
-  place-items: center;
-  background: #e5ecd9;
-  border-radius: 4px;
-  width: 23px;
-  height: 23px;
-  flex-shrink: 0;
-  font-size: 10px;
-}
-.reach-card.selected .reach-check {
-  background: #416c3e;
-  color: #fff;
-}
-.reach-card strong {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-}
-.reach-card small {
-  display: block;
-  margin-top: 8px;
-  font-size: 10px;
-  color: #86957a;
-}
 .planner-hint {
   display: block;
   font-size: 9px;
   line-height: 1.8;
   color: #8a967e;
   margin-top: 16px;
-}
-.reset-plan {
-  border: 0;
-  background: none;
-  display: flex;
-  gap: 7px;
-  font-size: 10px;
-  padding: 0;
-  margin-top: 18px;
-  color: #7c8e69;
 }
 .plan-summary {
   display: grid;
@@ -1221,50 +1166,6 @@ header nav {
 .plan-summary span {
   font-size: 8px;
   color: #839276;
-}
-.plan-observations {
-  padding: 12px;
-  margin: 0 0 16px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  font-size: .8rem;
-}
-.plan-observations summary {
-  cursor: pointer;
-}
-.plan-observations fieldset {
-  min-width: 0;
-  margin: 13px 0 0;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-}
-.plan-observations fieldset .field-label:last-child {
-  margin-bottom: 0;
-}
-.plan-observations textarea {
-  width: 100%;
-  min-width: 0;
-  padding: 8px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  resize: vertical;
-}
-.route-preview {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  padding: 10px 0 22px;
-  flex-wrap: wrap;
-}
-.route-preview small {
-  font-size: 8px;
-  color: #839276;
-  margin-left: auto;
 }
 .trip-form .button {
   width: 100%;
@@ -1409,32 +1310,14 @@ header nav {
   background: #18271d;
   border-color: #3a4e38;
 }
-[data-theme="dark"] .reach-card {
-  background: #203022;
-  border-color: #3b4e34;
-}
-[data-theme="dark"] .reach-check {
-  background: #3b4f30;
-  color: #e4efd2;
-}
 [data-theme="dark"] .field-label,
 [data-theme="dark"] .planner-hint,
-[data-theme="dark"] .reach-card small,
 [data-theme="dark"] .plan-summary span,
-[data-theme="dark"] .route-preview small,
 [data-theme="dark"] .study-facts small {
   color: #a0b08f;
 }
 [data-theme="dark"] .closing {
   background: radial-gradient(ellipse at center, #263c26, transparent 67%);
-}
-[data-theme="dark"] .reach-card.selected {
-  background: #30472a;
-  border-color: #a6c576;
-}
-[data-theme="dark"] .reach-card.selected .reach-check {
-  background: #b5d18e;
-  color: #22351d;
 }
 [data-theme="dark"] .field-label input,
 [data-theme="dark"] .field-label select {
@@ -1461,8 +1344,7 @@ header nav {
   .trip-form .panel-title,
   .trip-form .plan-summary,
   .trip-form .planner-hint,
-  .trip-form .plan-feedback,
-  .trip-form .plan-observations {
+  .trip-form .plan-feedback {
     grid-column: 1/-1;
   }
   header {
@@ -1496,15 +1378,8 @@ header nav {
   .planner-workspace {
     grid-template-columns: 1fr;
   }
-  .reach-panel {
+  .plan-object-panel {
     padding: 20px;
-  }
-  .reach-list {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-  .reach-card {
-    padding: 13px;
   }
   .trip-form {
     display: block;
@@ -1534,9 +1409,6 @@ header nav {
     padding-top: 0;
   }
   .plan-feedback {
-    font-size: 12px;
-  }
-  .route-preview {
     font-size: 12px;
   }
   .download-plan {

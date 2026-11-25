@@ -170,33 +170,55 @@ const fs = require("node:fs");
   await reportViewer.waitFor({ state: "hidden" });
   if (await surveyMap.getByRole("button", { name: "Объект №22", exact: true }).getAttribute("aria-pressed") !== "true")
     throw Error("The selected map point changed after closing the photo");
-  await p.locator("#survey").getByRole("button", { name: "Участок C в план" }).click();
+  const addObject = stand.getByRole("button", { name: "Объект в план" });
+  await addObject.click();
   const planner = p.locator("#planner");
-  const northern = planner.getByRole("button", { name: /Северо-западный участок/ }).filter({ hasText: "Северо-западный участок" });
-  const southernPin = surveyMap.getByRole("button", { name: /Участок A на карте/ });
-  if (await northern.getAttribute("aria-pressed") !== "true") throw Error("Report reach was not added");
-  await southernPin.click();
-  if (await surveyMap.locator(".survey-pin.is-in-plan").count() !== 15) throw Error("Planning map highlights the wrong report points");
+  const plannedObjects = planner.locator(".plan-object");
+  await plannedObjects.filter({ hasText: "Объект №22" }).waitFor();
+  if (await surveyMap.locator(".survey-pin.is-in-plan").count() !== 1)
+    throw Error("Adding one object selected more points in its reach");
+  await registry.getByRole("button", { name: "Показать объект №19 на карте" }).click();
+  await stand.getByRole("button", { name: "Оставить", exact: true }).click();
+  await registry.locator("tr.is-selected").getByText("Оставить", { exact: true }).waitFor();
+  if (await plannedObjects.count() !== 1) throw Error("Keeping object 19 changed the removal plan");
+  await planner.getByRole("button", { name: "Сохранить план" }).click();
+  await planner.getByRole("button", { name: "План сохранён" }).waitFor();
+  if (await planner.getByRole("button", { name: "Скачать план JSON" }).isEnabled())
+    throw Error("Export was enabled without a date");
+  await p.reload();
+  await plannedObjects.filter({ hasText: "Объект №22" }).waitFor();
+  await stand.getByRole("button", { name: "Оставить", exact: true }).waitFor();
+  if (await stand.getByRole("button", { name: "Оставить", exact: true }).getAttribute("aria-pressed") !== "true")
+    throw Error("The verified keep decision did not survive reload");
+  await registry.getByRole("button", { name: "Показать объект №7 на карте" }).click();
+  await addObject.click();
+  await planner.getByRole("button", { name: "Убрать объект №7 из плана" }).click();
+  await registry.locator("tr.is-selected").getByText("На проверке", { exact: true }).waitFor();
+  await addObject.click();
+  if (await surveyMap.locator(".survey-pin.is-in-plan").count() !== 2)
+    throw Error("The removal map must highlight only selected objects");
   await planner.getByLabel("Дата выезда").fill("2026-12-01");
-  await planner.locator("summary").click();
-  await planner.getByLabel("Заметка участка C").fill("Проверить доступ к берегу");
+  await planner.getByLabel("Заметка к объекту №22").fill("Проверить доступ к берегу");
   await planner.getByRole("button", { name: "Сохранить план" }).click();
   await planner.getByRole("button", { name: "План сохранён" }).waitFor();
   await planner.getByRole("button", { name: "Печатный план / PDF" }).click();
-  const paper = p.getByRole("dialog", { name: "План выезда" });
-  await paper.getByText("8 объектов из отчёта · № 15–22").waitFor();
+  const paper = p.getByRole("dialog", { name: "План устранения завалов" });
+  await paper.getByRole("heading", { name: /Объект №22/ }).waitFor();
   await paper.getByText("Проверить доступ к берегу").waitFor();
+  if (await paper.getByRole("heading", { name: /Объект №19/ }).count())
+    throw Error("An object marked keep appeared in the printed plan");
   await p.keyboard.press("Escape");
   const [download] = await Promise.all([
     p.waitForEvent("download"),
     planner.getByRole("button", { name: "Скачать план JSON" }).click(),
   ]);
   const plan = JSON.parse(fs.readFileSync(await download.path(), "utf8"));
-  if (plan.route.map((row) => row.section_id).join() !== "A,C" ||
-      plan.route[1].report_objects.map((point) => point.id).join() !== "15,16,17,18,19,20,21,22")
-    throw Error("JSON export did not match the selected report sections");
+  if (plan.objects.map(({ id }) => id).join() !== "7,22" ||
+      plan.objects[1].section_id !== "C" ||
+      plan.objects[1].note !== "Проверить доступ к берегу")
+    throw Error("JSON export must include only the explicitly chosen objects and their notes");
   await p.reload();
-  if (await planner.locator(".reach-card.selected").count() !== 2) throw Error("Saved survey sections did not restore");
+  if (await plannedObjects.count() !== 2) throw Error("Saved removal decisions did not restore");
   const presentation = p.getByRole("dialog", { name: "Автопрезентация обследования" });
   const watchPresentation = p.getByRole("button", { name: "Автопрезентация · 90 сек." });
   await watchPresentation.click();
@@ -232,13 +254,13 @@ const fs = require("node:fs");
   await show.getByText("Дефектовка и реестр", { exact: true }).waitFor();
   await p.waitForFunction(() => document.querySelector("#survey-map-panel").getBoundingClientRect().top < 175);
   await next.click();
-  await show.getByText("План выезда", { exact: true }).waitFor();
+  await show.getByText("План устранения", { exact: true }).waitFor();
   for (let i = 0; i < 4; i += 1) await next.click();
   await show.getByText("RIVER", { exact: true }).waitFor();
   await p.keyboard.press("Escape");
   await show.waitFor({ state: "detached" });
   if (await p.locator("#survey-footage[open]").count()) throw Error("Autoplay did not restore footage disclosure");
-  if (await planner.locator(".reach-card.selected").count() !== 2) throw Error("Autoplay changed the user's plan");
+  if (await plannedObjects.count() !== 2) throw Error("Autoplay changed the user's plan");
   const broken = await p.evaluate(() =>
     [...document.querySelectorAll('a[href^="#"]')]
       .map((a) => a.getAttribute("href"))

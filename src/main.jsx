@@ -85,7 +85,7 @@ function App() {
             ["#about", "О проекте"],
             ["#survey", "Обследование"],
             ["#video", "Видео"],
-            ["#planner", "План выезда"],
+            ["#planner", "План устранения"],
           ].map(([href, label]) => (
             <a key={href} href={href} onClick={() => setMenu(false)}>
               {label}

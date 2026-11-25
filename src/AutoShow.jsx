@@ -8,7 +8,7 @@ const stops = [
   { target: "workflow", title: "Принцип работы", seconds: 7 },
   { target: "survey-footage", title: "Видео обследования", seconds: 15 },
   { target: "survey-map-panel", title: "Дефектовка и реестр", seconds: 18 },
-  { target: "planner", title: "План выезда", seconds: 14 },
+  { target: "planner", title: "План устранения", seconds: 14 },
   { target: "tracking-demo", title: "Объединение наблюдений", seconds: 8 },
   { target: "results", title: "Результаты", seconds: 7 },
   { target: "closing", title: "Сахалинский центр ИИ", seconds: 7 },

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { PLAN_STORAGE_KEY, readPlan, normalizePlan, validDate } from "../src/lib/plan-storage.js";
+import { PLAN_STORAGE_KEY, readPlan, normalizePlan, validDate, removalObjects } from "../src/lib/plan-storage.js";
 import { planningReaches, reachForRecord } from "../src/lib/survey-reaches.js";
 test("invalid and inaccessible local storage do not break startup", () => {
   for (const raw of ["{", "null", "42", "[]", '"bad"'])
@@ -15,40 +15,52 @@ test("invalid and inaccessible local storage do not break startup", () => {
     null,
   );
 });
-test("saved selections are filtered, ordered and deduplicated, including empty plans", () => {
-  assert.deepEqual(
-    normalizePlan({ selected: ["C", "A", "C", "unknown"] }).selected,
-    ["A", "C"],
-  );
-  assert.deepEqual(normalizePlan({ selected: [] }).selected, []);
-  assert.deepEqual(normalizePlan({ selected: 4 }).selected, []);
-});
-test("invalid field and note types are replaced safely", () => {
+test("saved decisions use report IDs and accept only known choices", () => {
   const plan = normalizePlan({
+    decisions: {
+      7: { decision: "remove", note: "x".repeat(900) },
+      15: { decision: "remove", note: { bad: true } },
+      19: { decision: "keep" },
+      20: { decision: "pending", note: "Уточнить доступ" },
+      21: { decision: "pending" },
+      22: { decision: ["remove"] },
+      23: { decision: "remove" },
+      C: { decision: "remove" },
+    },
     date: "2026-02-30",
     team: {},
-    task: 42,
-    observations: {
-      A: { note: { bad: true }, status: {} },
-      B: { note: "x".repeat(900), status: "Передать специалисту" },
-      C: [],
-    },
   });
   assert.equal(plan.date, "");
   assert.equal(typeof plan.team, "string");
-  assert.equal(typeof plan.task, "string");
-  assert.equal(plan.observations.A.note, "");
-  assert.equal(plan.observations.B.note.length, 600);
-  assert.equal(plan.observations.B.status, "Передать специалисту");
-  assert.equal(plan.observations.C, undefined);
+  assert.deepEqual(Object.keys(plan.decisions), ["7", "15", "19", "20"]);
+  assert.deepEqual(plan.decisions[7], { decision: "remove", note: "x".repeat(600) });
+  assert.equal(plan.decisions[15].note, "");
+  assert.deepEqual(plan.decisions[19], { decision: "keep", note: "" });
+  assert.deepEqual(plan.decisions[20], { decision: "pending", note: "Уточнить доступ" });
 });
+
+test("the removal plan contains only individually selected objects", () => {
+  const decisions = {
+    7: { decision: "remove", note: "" },
+    19: { decision: "keep", note: "" },
+    20: { decision: "pending", note: "На проверку" },
+    22: { decision: "remove", note: "Проверить доступ к берегу" },
+  };
+  const chosen = removalObjects(decisions);
+  assert.deepEqual(chosen.map(({ id, section_id }) => [id, section_id]), [[7, "A"], [22, "C"]]);
+  assert.equal(chosen[1].lat, 46.782232);
+  assert.equal(chosen[1].lon, 142.4868631);
+  assert.equal(chosen[1].note, "Проверить доступ к берегу");
+  assert.deepEqual(removalObjects({ 19: { decision: "keep" } }), []);
+});
+
 test("only actual calendar dates survive validation", () => {
   assert.equal(validDate("2028-02-29"), true);
   assert.equal(validDate("2026-02-29"), false);
   assert.equal(validDate("2026-11-06"), true);
   assert.equal(validDate("2026-13-01"), false);
 });
-test("legacy plans retain logistics without reassigning fictitious sections or notes", () => {
+test("legacy plans retain logistics without marking any objects for removal", () => {
   const oldPlan = {
     selected: ["A", "C"],
     date: "2026-11-12",
@@ -56,11 +68,14 @@ test("legacy plans retain logistics without reassigning fictitious sections or n
     task: "Расчистка согласованных участков",
     observations: { A: { note: "Старая заметка" } },
   };
-  const migrated = readPlan({ getItem: (key) => key === "river-field-plan" ? JSON.stringify(oldPlan) : null });
-  assert.deepEqual(migrated, { ...oldPlan, selected: [], observations: {} });
-  const current = { ...oldPlan, selected: ["B"], observations: { B: { note: "Новая заметка", status: "" } } };
+  for (const key of ["river-field-plan:lyutoga-2025-07-02", "river-field-plan"]) {
+    const migrated = readPlan({ getItem: (name) => name === key ? JSON.stringify(oldPlan) : null });
+    assert.deepEqual(migrated, { date: oldPlan.date, team: oldPlan.team, decisions: {} });
+  }
+  const current = { date: "", team: oldPlan.team, decisions: { 19: { decision: "keep", note: "" } } };
   assert.deepEqual(readPlan({ getItem: (key) => key === PLAN_STORAGE_KEY ? JSON.stringify(current) : null }), current);
 });
+
 test("planning sections cover every report point exactly once", () => {
   const records = JSON.parse(readFileSync(new URL("../src/lib/survey-data.json", import.meta.url), "utf8"));
   assert.deepEqual(planningReaches.flatMap(({ recordIds }) => recordIds), records.map(({ id }) => id));

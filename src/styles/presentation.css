@@ -201,19 +201,19 @@
   margin: 27px 0 15px;
   font-weight: 500;
 }
-.paper-reach {
+.paper-object {
   break-inside: avoid;
   border: 1px solid #dce4e8;
   border-radius: 5px;
   padding: 17px;
   margin-bottom: 14px;
 }
-.paper-reach h3 {
+.paper-object h3 {
   font-size: 14px;
   letter-spacing: 0;
   margin: 0 0 10px;
 }
-.paper-reach p {
+.paper-object p {
   font-size: 11px;
   margin: 8px 0;
   line-height: 1.7;
@@ -344,7 +344,7 @@
     padding: 0 !important;
     box-shadow: none !important;
   }
-  .paper-reach {
+  .paper-object {
     break-inside: avoid;
   }
   .paper-brand,
