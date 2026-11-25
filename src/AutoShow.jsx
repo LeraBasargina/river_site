@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Check, Maximize, Pause, Play, Waves, X } from "lucide-react";
-import { confidence, segmentationVideo, SurveyMap, surveyPhoto } from "./Survey";
+import { confidence, SurveyMap, surveyPhoto } from "./Survey";
 import { planningReaches } from "./Planner";
 import { sceneAt, showDuration, showFadeDuration, showScenes } from "./lib/auto-show-timeline";
 import { TEAMS } from "./lib/plan-storage";
+import { segmentationVideo } from "./lib/river-video";
 import records from "./lib/survey-data.json";
 import "./styles/auto-show.css";
 

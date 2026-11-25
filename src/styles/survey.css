@@ -93,6 +93,30 @@
   color: #dae9d8;
   font-variant-numeric: tabular-nums;
 }
+.survey-basemap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.survey-basemap path {
+  fill: #3c7589;
+  stroke: #78afbe;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.survey-map-attribution {
+  position: absolute;
+  top: 11%;
+  right: 4%;
+  color: #d9e8df;
+  font-size: clamp(.54rem, 1vw, .68rem);
+}
+.survey-map-attribution a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .survey-grid-lat, .survey-grid-lon {
   position: absolute;
   color: #b9cabe;
@@ -182,10 +206,11 @@
   align-items: center;
   gap: 5px;
 }
-.survey-map-caption a {
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.survey-map-caption i {
+  width: 16px;
+  height: 8px;
+  border-radius: 2px;
+  background: #3c7589;
 }
 .survey-photo-link {
   position: relative;

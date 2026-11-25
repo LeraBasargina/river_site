@@ -8,11 +8,16 @@ import {
   Maximize2,
   X,
 } from "lucide-react";
+import { stamp } from "./lib/river-video";
 const frames = [
-  { time: 20, x: 40.5, y: 34.5 },
-  { time: 22, x: 42.2, y: 39.3 },
-  { time: 24, x: 47.5, y: 49 },
+  { time: 0, x: 48.2, y: 49.4 },
+  { time: 1, x: 50.8, y: 54.6 },
+  { time: 2, x: 50.9, y: 60.8 },
 ];
+
+function framePhoto({ time }) {
+  return `/media/track-${String(time).padStart(2, "0")}.jpg`;
+}
 const steps = [
   {
     title: "Три наблюдения",
@@ -40,17 +45,17 @@ function FrameDialog({ frame, onClose }) {
         e.preventDefault();
         onClose();
       }}
-      aria-label={"Кадр 00:" + frame.time}
+      aria-label={"Кадр " + stamp(frame.time)}
     >
       <div className="frame-dialog-head">
-        <span>РЕАЛЬНЫЙ КАДР · 00:{frame.time}</span>
+        <span>РЕАЛЬНЫЙ КАДР · {stamp(frame.time)}</span>
         <button onClick={onClose} aria-label="Закрыть кадр">
           <X size={20} />
         </button>
       </div>
       <div className="tracking-photo">
         <img
-          src={"/media/track-" + frame.time + ".jpg"}
+          src={framePhoto(frame)}
           alt={"Кадр с дрона на " + frame.time + " секунде"}
         />
         <span
@@ -80,7 +85,7 @@ export default function TrackingDemo() {
           </h2>
         </div>
         <p>
-          Три кадра одной записи с интервалом в две секунды.
+          Три кадра одной записи с интервалом в одну секунду.
           <br />
           Проследите древесное скопление у правого берега.
         </p>
@@ -110,11 +115,11 @@ export default function TrackingDemo() {
               className="tracking-frame"
               key={f.time}
               onClick={() => setFrame(f)}
-              aria-label={"Открыть кадр 00:" + f.time}
+              aria-label={"Открыть кадр " + stamp(f.time)}
             >
               <div className="tracking-photo">
                 <img
-                  src={"/media/track-" + f.time + ".jpg"}
+                  src={framePhoto(f)}
                   alt={"Речное обследование на " + f.time + " секунде"}
                 />
                 {step > 0 && (
@@ -128,7 +133,7 @@ export default function TrackingDemo() {
                 </span>
               </div>
               <div className="tracking-frame-caption">
-                <span>00:{f.time}</span>
+                <span>{stamp(f.time)}</span>
                 <b>Наблюдение 0{i + 1}</b>
               </div>
             </button>
@@ -145,9 +150,7 @@ export default function TrackingDemo() {
             aria-label="Три наблюдения одного ориентира"
           >
             <div className="merge-inputs">
-              <span>00:20</span>
-              <span>00:22</span>
-              <span>00:24</span>
+              {frames.map(({ time }) => <span key={time}>{stamp(time)}</span>)}
             </div>
             <div className="merge-connector">→</div>
             <div className="merge-output">

@@ -1,29 +1,35 @@
 import React, { useState } from "react";
 import { ArrowUpRight, FileDown, MapPin, Play, Video } from "lucide-react";
 import records from "./lib/survey-data.json";
+import basemap from "./lib/survey-basemap.json";
 import { showDuration } from "./lib/auto-show-timeline";
+import { segmentationVideo } from "./lib/river-video";
 import "./styles/survey.css";
 
-const bounds = { north: 46.784, south: 46.770, west: 142.482, east: 142.502 };
+const { bounds } = basemap;
 const latitudes = [46.782, 46.778, 46.774];
 const longitudes = [142.486, 142.490, 142.494, 142.498];
 
+const longitudeX = (lon) => (100 * (lon - bounds.west)) / (bounds.east - bounds.west);
+const latitudeY = (lat) => (100 * (bounds.north - lat)) / (bounds.north - bounds.south);
+
 function position({ lat, lon }) {
   return {
-    left: `${(100 * (lon - bounds.west)) / (bounds.east - bounds.west)}%`,
-    top: `${(100 * (bounds.north - lat)) / (bounds.north - bounds.south)}%`,
+    left: `${longitudeX(lon)}%`,
+    top: `${latitudeY(lat)}%`,
   };
 }
+
+const waterPaths = basemap.polygons.map((polygon) => polygon.map((ring) => {
+  const points = ring.map(([lon, lat]) => `${longitudeX(lon).toFixed(3)} ${latitudeY(lat).toFixed(3)}`);
+  return `M${points.join(" L")} Z`;
+}).join(" "));
 
 const mapWidthMetres = (bounds.east - bounds.west) * 111320 *
   Math.cos((Math.PI * (bounds.north + bounds.south)) / 360);
 
 export const featuredRecord = records.find(({ id }) => id === 19);
 export const surveyPhoto = (record) => `/media/survey/${record.photo}`;
-export const segmentationVideo = {
-  src: "/media/survey-segmentation.mp4",
-  poster: "/media/survey-video-poster.jpg",
-};
 export const coordinates = ({ lat, lon }) => `${lat.toFixed(7)}, ${lon.toFixed(7)}`;
 export const confidence = (record) =>
   new Intl.NumberFormat("ru-RU", { style: "percent", maximumFractionDigits: 1 }).format(record.confidence);
@@ -37,19 +43,27 @@ export function SurveyMap({ selectedId, onSelect, flight = null }) {
   };
 
   return (
-    <div className="survey-map" role="group" aria-label="Карта расчётных координат объектов отчёта">
+    <div className="survey-map" role="group" aria-label="Русло реки и расчётные координаты объектов обследования">
+      <svg className="survey-basemap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        {waterPaths.map((path) => <path key={path} d={path} fillRule="evenodd" />)}
+      </svg>
       {latitudes.map((lat) => (
-        <div aria-hidden="true" key={lat} className="survey-grid-lat" style={{ top: position({ lat }).top }}>
+        <div aria-hidden="true" key={lat} className="survey-grid-lat" style={{ top: `${latitudeY(lat)}%` }}>
           <span>{lat.toFixed(3)}° с. ш.</span>
         </div>
       ))}
       {longitudes.map((lon) => (
-        <div aria-hidden="true" key={lon} className="survey-grid-lon" style={{ left: position({ lon }).left }}>
+        <div aria-hidden="true" key={lon} className="survey-grid-lon" style={{ left: `${longitudeX(lon)}%` }}>
           <span>{lon.toFixed(3)}°</span>
         </div>
       ))}
       <div aria-hidden="true" className="survey-north">↑ <span>С</span></div>
       <div aria-hidden="true" className="survey-scale" style={{ width: `${(100 * 200) / mapWidthMetres}%` }}>200 м</div>
+      <span className="survey-map-attribution">
+        {onSelect
+          ? <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">{basemap.attribution}</a>
+          : "© OpenStreetMap"}
+      </span>
       {records.map((record) => {
         const selected = record.id === selectedId;
         const style = position(record);
@@ -85,10 +99,6 @@ export function SurveyMap({ selectedId, onSelect, flight = null }) {
   );
 }
 
-function osmLink({ lat, lon }) {
-  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
-}
-
 export default function Survey({ onShow }) {
   const [selectedId, setSelectedId] = useState(featuredRecord.id);
   const selected = records.find(({ id }) => id === selectedId);
@@ -120,9 +130,7 @@ export default function Survey({ onShow }) {
           <SurveyMap selectedId={selectedId} onSelect={setSelectedId} />
           <p className="survey-map-caption">
             <span><MapPin size={16} /> Расчётные координаты из отчёта</span>
-            <a href={osmLink(selected)} target="_blank" rel="noreferrer">
-              Точка на OpenStreetMap <ArrowUpRight size={15} />
-            </a>
+            <span><i aria-hidden="true" /> Русло реки</span>
           </p>
         </div>
         <article className="survey-card" aria-label="Карточка выбранного объекта">
@@ -142,7 +150,7 @@ export default function Survey({ onShow }) {
           </div>
         </article>
       </div>
-      <p className="survey-note">Точки на координатной сетке построены по отчёту. Точность геопривязки в отчёте не указана. Решение о расчистке принимается отдельно после оценки участка.</p>
+      <p className="survey-note">Точки нанесены по расчётным координатам из отчёта. Береговая линия на подложке обобщена. Решение о расчистке принимается после оценки участка.</p>
 
       <div className="survey-table-scroll" tabIndex={0} role="region" aria-label="Таблица объектов обследования">
         <table className="survey-table">

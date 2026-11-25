@@ -1,4 +1,5 @@
 import { STATUSES } from "./lib/plan-storage.js";
+import { segmentationVideo, stamp } from "./lib/river-video";
 import React, { useRef, useState, useEffect } from "react";
 import {
   ArrowUpRight,
@@ -12,32 +13,39 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-const checkpoints = [
+const checkpointDetails = [
   {
     id: "A",
-    time: 5,
     title: "Начало облёта",
-    text: "Посмотрите, как маска выделяет древесину на береговой линии.",
+    text: "Посмотрите, как модель выделяет древесину на береговой линии.",
   },
   {
     id: "B",
-    time: 24,
     title: "Обзор излучины",
     text: "Смена ракурса показывает, почему наблюдения нужно связывать между кадрами.",
   },
   {
     id: "C",
-    time: 43,
     title: "Продолжение маршрута",
     text: "Оцените результат на следующих кадрах обследования.",
   },
 ];
-const stamp = (t) =>
-  `${Math.floor(t / 60)
-    .toString()
-    .padStart(2, "0")}:${Math.floor(t % 60)
-    .toString()
-    .padStart(2, "0")}`;
+const modes = {
+  segmentation: {
+    src: segmentationVideo.src,
+    duration: 26.655,
+    times: [0, 9, 22],
+  },
+  detection: {
+    src: "/media/river-detection.mp4",
+    duration: 58.125,
+    times: [5, 24, 43],
+  },
+};
+
+function checkpointPhoto(mode, id) {
+  return `/media/checkpoint-${mode}-${id}.jpg`;
+}
 export default function Mission({ onPlan }) {
   const [expanded, setExpanded] = useState(false);
   const section = useRef(null);
@@ -46,11 +54,14 @@ export default function Mission({ onPlan }) {
     [mode, setMode] = useState("segmentation"),
     [index, setIndex] = useState(0),
     [time, setTime] = useState(0),
+    [duration, setDuration] = useState(modes.segmentation.duration),
     [playing, setPlaying] = useState(false),
     [drafts, setDrafts] = useState({}),
     [error, setError] = useState("");
   const video = useRef(null),
     target = useRef(0);
+  const clip = modes[mode];
+  const checkpoints = checkpointDetails.map((point, i) => ({ ...point, time: clip.times[i] }));
   const point = checkpoints[index];
   const note = drafts[point.id]?.note || "";
   const status = drafts[point.id]?.status || "Требует осмотра";
@@ -123,7 +134,11 @@ export default function Mission({ onPlan }) {
     setIndex(n);
   }
   function changeMode(m) {
-    target.current = video.current?.currentTime || time;
+    if (m === mode) return;
+    target.current = modes[m].times[index];
+    setTime(target.current);
+    setDuration(modes[m].duration);
+    setError("");
     setPlaying(false);
     setMode(m);
   }
@@ -313,9 +328,10 @@ export default function Mission({ onPlan }) {
                 controls
                 playsInline
                 preload="metadata"
-                poster="/media/river-poster.jpg"
+                poster={checkpointPhoto(mode, "A")}
                 aria-label="Видео обследования реки"
                 onLoadedMetadata={(e) => {
+                  setDuration(e.currentTarget.duration);
                   e.currentTarget.currentTime = Math.min(
                     target.current,
                     e.currentTarget.duration - 0.1,
@@ -331,7 +347,7 @@ export default function Mission({ onPlan }) {
                 }
               >
                 <source
-                  src={"/media/river-" + mode + ".mp4"}
+                  src={clip.src}
                   type="video/mp4"
                 />
               </video>
@@ -355,7 +371,7 @@ export default function Mission({ onPlan }) {
                 >
                   {playing ? <Pause size={17} /> : <Play size={17} />}
                 </button>
-                <span>{stamp(time)} / 00:58</span>
+                <span>{stamp(time >= duration ? Math.ceil(duration) : time)} / {stamp(Math.ceil(duration))}</span>
                 <span>ЗАПИСЬ ОБРАБОТКИ</span>
               </div>
               {error && <p role="alert">{error}</p>}
@@ -367,7 +383,7 @@ export default function Mission({ onPlan }) {
                     onClick={() => jump(i)}
                     aria-pressed={i === index}
                   >
-                    <img src={"/media/checkpoint-" + p.time + ".jpg"} alt="" />
+                    <img src={checkpointPhoto(mode, p.id)} alt="" />
                     <span>
                       {stamp(p.time)}
                       <b>{p.title}</b>
@@ -436,7 +452,7 @@ export default function Mission({ onPlan }) {
               <path d="M25 55H275" className="mini-timeline" />
               <circle
                 className="mini-playhead"
-                cx={25 + 250 * Math.min(time / 58, 1)}
+                cx={25 + 250 * Math.min(time / duration, 1)}
                 cy="55"
                 r="5"
               />
@@ -455,8 +471,8 @@ export default function Mission({ onPlan }) {
                   }}
                   className={index === i ? "active" : ""}
                 >
-                  <circle cx={25 + (250 * p.time) / 58} cy="55" r="12" />
-                  <text x={25 + (250 * p.time) / 58} y="59" textAnchor="middle">
+                  <circle cx={25 + (250 * p.time) / duration} cy="55" r="12" />
+                  <text x={25 + (250 * p.time) / duration} y="59" textAnchor="middle">
                     {p.id}
                   </text>
                 </g>

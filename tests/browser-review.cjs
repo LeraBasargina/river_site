@@ -50,8 +50,8 @@ const fs = require("node:fs");
   await tracking.getByRole("tab", { name: /Связать между кадрами/ }).click();
   if ((await tracking.locator(".tracking-frames .track-focus").count()) !== 3)
     throw Error("Tracking highlights missing");
-  await tracking.getByRole("button", { name: "Открыть кадр 00:22" }).click();
-  await p.getByRole("dialog", { name: "Кадр 00:22" }).waitFor();
+  await tracking.getByRole("button", { name: "Открыть кадр 00:01" }).click();
+  await p.getByRole("dialog", { name: "Кадр 00:01" }).waitFor();
   await p.keyboard.press("Escape");
   await tracking
     .getByRole("button", { name: "Следующий шаг", exact: true })
@@ -60,6 +60,24 @@ const fs = require("node:fs");
     .locator(".merge-output")
     .getByText("T-01", { exact: true })
     .waitFor();
+  const mission = p.locator("#video");
+  await route.getByRole("button", { name: /Обзор излучины/ }).click();
+  const video = mission.getByLabel("Видео обследования реки");
+  await p.waitForFunction(() => {
+    const player = document.querySelector("#video video");
+    return player?.readyState >= 1 && Math.abs(player.currentTime - 9) < 0.15;
+  });
+  if (!(await video.locator("source").getAttribute("src")).endsWith("survey-segmentation.mp4"))
+    throw Error("Contour mode did not use the new source");
+  await mission.getByRole("button", { name: "Детекция рамками" }).click();
+  await p.waitForFunction(() => {
+    const player = document.querySelector("#video video");
+    return player?.readyState >= 1 && Math.abs(player.currentTime - 24) < 0.15;
+  });
+  const surveyMap = p.locator("#survey-map-panel");
+  await surveyMap.locator(".survey-basemap path").waitFor();
+  await surveyMap.getByRole("button", { name: "Объект №22" }).click();
+  await p.locator("#survey .survey-photo-link").getByAltText("Кадр из отчёта с разметкой объекта №22").waitFor();
   await p.getByRole("button", { name: "Смотреть автопоказ · 90 сек." }).click();
   const show = p.getByRole("dialog", { name: /RIVER.*AIJ-2026/ });
   const playhead = show.getByRole("slider", { name: "Позиция автопоказа" });
