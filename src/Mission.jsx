@@ -202,7 +202,6 @@ export default function Mission() {
             {[
               ["compare", "До / после"],
               ["video", "Видео и фрагменты"],
-              ["passport", "Паспорт наблюдения"],
             ].map(([id, title]) => (
               <button
                 key={id}
@@ -291,7 +290,7 @@ export default function Mission() {
                 моделью области.
               </p>
             </div>
-          ) : tab === "video" ? (
+          ) : (
             <div className="mission-video">
               <div
                 className="video-modes"
@@ -383,31 +382,6 @@ export default function Mission() {
               <p className="mission-footnote">
                 Контрольные точки обозначают время в ролике. Участки карты
                 построены по координатам из отчёта обследования.
-              </p>
-            </div>
-          ) : (
-            <div className="passport-pane">
-              <img
-                src="/media/survey-segmentation.jpg"
-                alt="Пример наблюдения с масками древесных скоплений"
-              />
-              <div className="passport-meta">
-                <span>
-                  <small>Материал</small>
-                  <b>Кадр из AI_Center_site</b>
-                </span>
-                <span>
-                  <small>Метод</small>
-                  <b>Сегментация</b>
-                </span>
-                <span>
-                  <small>Геопривязка кадра</small>
-                  <b>Не предоставлена</b>
-                </span>
-              </div>
-              <p className="mission-footnote">
-                Зелёные контуры показывают, что модель выделила в этом кадре.
-                Повторные обнаружения одного завала сопоставляются при обработке видео.
               </p>
             </div>
           )}

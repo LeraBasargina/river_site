@@ -55,8 +55,7 @@
   color: #157c85;
   border-color: #22a6aa;
 }
-.compare-pane,
-.passport-pane {
+.compare-pane {
   padding: 20px;
 }
 .image-compare {
@@ -302,34 +301,6 @@
   margin-top: 6px;
   line-height: 1.4;
 }
-.passport-pane > img {
-  display: block;
-  width: 100%;
-  border-radius: 8px;
-}
-.passport-meta {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  margin-top: 18px;
-  padding: 10px 18px;
-  gap: 15px;
-}
-.passport-meta span {
-  padding: 8px 0;
-  min-width: 0;
-}
-.passport-meta small {
-  display: block;
-  font-size: var(--text-label);
-  color: #536e79;
-  margin-bottom: 8px;
-}
-.passport-meta b {
-  font-size: var(--text-control);
-  font-weight: 500;
-}
 .project-status {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -398,7 +369,6 @@
 [data-theme="dark"] .mission-flow,
 [data-theme="dark"] .mission-playbar,
 [data-theme="dark"] .checkpoint-row span,
-[data-theme="dark"] .passport-meta small,
 [data-theme="dark"] .mission-route button small,
 [data-theme="dark"] .mission-side > p,
 [data-theme="dark"] .mission-footnote,
@@ -440,8 +410,7 @@
     gap: 14px;
     padding: 0 15px;
   }
-  .compare-pane,
-  .passport-pane {
+  .compare-pane {
     padding: 15px;
   }
 }
@@ -489,11 +458,6 @@
   }
   .project-status article {
     padding: 22px;
-  }
-  .passport-meta {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    padding: 12px;
   }
 }
 .image-compare {
