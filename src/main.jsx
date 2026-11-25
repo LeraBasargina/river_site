@@ -14,7 +14,7 @@ import {
   Minus,
   Menu,
   X,
-  MoveUpRight,
+  RotateCcw,
   Video,
   Mountain,
   Leaf,
@@ -29,43 +29,13 @@ import "./styles/tracking-demo.css";
 
 import Planner from "./Planner";
 import Mission from "./Mission";
-import Survey from "./Survey";
+import Survey, { featuredRecord, SurveyMap, SurveyObjectCard } from "./Survey";
 import AutoShow from "./AutoShow";
 import TrackingDemo from "./TrackingDemo";
-import RiverMap from "./RiverScene";
+import records from "./lib/survey-data.json";
+import { reachForRecord } from "./lib/survey-reaches";
 
-const objects = [
-  {
-    id: "01",
-    x: 47,
-    y: 37,
-    lat: "47.02684",
-    lon: "142.73512",
-    name: "Древесный завал",
-    type: "Скопление древесины в русле",
-    score: 94,
-  },
-  {
-    id: "02",
-    x: 59,
-    y: 60,
-    lat: "47.02416",
-    lon: "142.73908",
-    name: "Древесный завал",
-    type: "Скопление на отмели",
-    score: 89,
-  },
-  {
-    id: "03",
-    x: 36,
-    y: 77,
-    lat: "47.02152",
-    lon: "142.73164",
-    name: "Древесный завал",
-    type: "Скопление в прибрежной зоне",
-    score: 91,
-  },
-];
+const mapZoomLevels = [1, 1.25, 1.5, 1.75];
 const stages = [
   {
     name: "Съёмка",
@@ -121,22 +91,25 @@ function App() {
     if (returnToMap) document.getElementById("survey-map-panel")?.focus();
   }
   const [stage, setStage] = useState(3),
-    [selected, setSelected] = useState(0),
+    [selectedId, setSelectedId] = useState(featuredRecord.id),
+    [zoomIndex, setZoomIndex] = useState(0),
+    [showContext, setShowContext] = useState(true),
+    [showRecords, setShowRecords] = useState(true),
     [menu, setMenu] = useState(false),
     [faq, setFaq] = useState(null);
-  const item = objects[selected];
+  const item = records.find(({ id }) => id === selectedId);
   function download() {
-    const csv =
-      "\uFEFFID;Объект;Широта;Долгота;Данные\n" +
-      objects
-        .map((o) => `${o.id};${o.name};${o.lat};${o.lon};Синтетический пример`)
-        .join("\n");
+    const header = "ID;Класс объекта;Расчётная широта;Расчётная долгота;Участок;Уверенность модели (0–1)";
+    const rows = records.map((record) => [
+      record.id, record.category, record.lat, record.lon, reachForRecord(record.id).id, record.confidence,
+    ].join(";"));
+    const csv = "\uFEFF" + [header, ...rows].join("\n");
     const url = URL.createObjectURL(
       new Blob([csv], { type: "text/csv;charset=utf-8;" }),
     );
     const a = document.createElement("a");
     a.href = url;
-    a.download = "RIVER_demo.csv";
+    a.download = "RIVER-lyutoga.csv";
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
@@ -213,10 +186,12 @@ function App() {
             </div>
           </div>
           <div className="hero-visual">
-            <RiverMap />
+            <SurveyMap selectedId={selectedId} onSelect={setSelectedId} />
             <div className="visual-caption">
-              <span>01 / НОВЫЙ ВЗГЛЯД НА РЕЧНЫЕ СИСТЕМЫ</span>
-              <MoveUpRight size={16} />
+              <span>ЛЮТОГА · {records.length} ОБЪЕКТА ИЗ ОТЧЁТА</span>
+              <a href="#survey" aria-label="Открыть материалы обследования">
+                <ArrowUpRight size={16} />
+              </a>
             </div>
           </div>
         </section>
@@ -346,47 +321,43 @@ function App() {
               ))}
             </div>
             <div className="demo-body">
-              <RiverMap
-                interactive
-                stage={stage}
-                selected={selected}
-                onSelect={setSelected}
-              />
-              <aside>
+              <div className="demo-map-panel">
+                <SurveyMap selectedId={selectedId} onSelect={setSelectedId}
+                  zoom={mapZoomLevels[zoomIndex]} showContext={showContext}
+                  showRecords={stage > 0 && showRecords} />
+                <div className="demo-map-controls" role="group" aria-label="Управление картой">
+                  <button type="button" aria-label="Приблизить" title="Приблизить"
+                    disabled={zoomIndex === mapZoomLevels.length - 1}
+                    onClick={() => setZoomIndex(zoomIndex + 1)}><Plus size={17} /></button>
+                  <button type="button" aria-label="Отдалить" title="Отдалить"
+                    disabled={zoomIndex === 0}
+                    onClick={() => setZoomIndex(zoomIndex - 1)}><Minus size={17} /></button>
+                  <button type="button" aria-label="Сбросить масштаб" title="Сбросить масштаб"
+                    disabled={zoomIndex === 0} onClick={() => setZoomIndex(0)}><RotateCcw size={16} /></button>
+                  <button type="button" aria-label="Дороги, здания и лес" title="Дороги, здания и лес"
+                    aria-pressed={showContext} onClick={() => setShowContext(!showContext)}><Layers size={17} /></button>
+                  {stage > 0 && (
+                    <button type="button" aria-label="Точки обследования" title="Точки обследования"
+                      aria-pressed={showRecords} onClick={() => setShowRecords(!showRecords)}><MapPin size={17} /></button>
+                  )}
+                </div>
+              </div>
+              <aside className="survey-section">
                 <div className="aside-eyebrow">
                   <span>ЭТАП 0{stage + 1}</span>
                 </div>
                 <h3>{stages[stage].title}</h3>
                 <p>{stages[stage].text}</p>
                 {stage > 0 ? (
-                  <div className="object-card">
-                    <div className="object-title">
-                      <span className="object-number">{item.id}</span>
-                      <div>
-                        <strong>{item.name}</strong>
-                        <small>{item.type}</small>
-                      </div>
-                    </div>
-                    <div className="object-data">
-                      <span>Координаты WGS84</span>
-                      <strong>
-                        {item.lat}° N<br />
-                        {item.lon}° E
-                      </strong>
-                    </div>
-                    <div className="confidence">
-                      <span>
-                        Уверенность модели <b>{item.score}%</b>
-                      </span>
-                      <div>
-                        <i style={{ width: item.score + "%" }} />
-                      </div>
-                    </div>
-                    <small className="synthetic-note">
-                      Синтетические данные для демонстрации интерфейса, не
-                      результаты измерений.
-                    </small>
-                  </div>
+                  <>
+                    <label className="field-label">
+                      Объект из отчёта
+                      <select value={selectedId} onChange={(event) => setSelectedId(Number(event.target.value))}>
+                        {records.map(({ id }) => <option key={id} value={id}>Объект №{id}</option>)}
+                      </select>
+                    </label>
+                    <SurveyObjectCard record={item} onPlan={addSurveyReach} />
+                  </>
                 ) : (
                   <div className="input-card">
                     <Video />
@@ -397,8 +368,8 @@ function App() {
                 <div className="aside-bottom">
                   {stage === 3 ? (
                     <button onClick={download}>
-                      <FileDown size={16} /> Скачать пример CSV{" "}
-                      <ArrowDownIcon />
+                      <FileDown size={16} /> Скачать данные отчёта (CSV)
+                      <ArrowUpRight size={16} />
                     </button>
                   ) : (
                     <button onClick={() => setStage(stage + 1)}>
@@ -410,17 +381,17 @@ function App() {
             </div>
             <div className="demo-footer">
               <span>
-                <span className="status-dot" /> Демонстрационный сценарий
+                <span className="status-dot" /> Обследование Лютоги · 2 июля 2025
               </span>
               <span>
-                Схема условная. Анализ видео в браузере не выполняется.
+                Точки нанесены по расчётным координатам из отчёта.
               </span>
             </div>
           </div>
         </section>
         <TrackingDemo />
         <Mission />
-        <Survey onShow={() => setShowOpen(true)} onPlan={addSurveyReach} />
+        <Survey selectedId={selectedId} onSelect={setSelectedId} onShow={() => setShowOpen(true)} onPlan={addSurveyReach} />
         <Planner request={planRequest} />
         {showOpen && <AutoShow onClose={closeShow} />}
         <section className="results section">
@@ -587,8 +558,5 @@ function App() {
       </footer>
     </>
   );
-}
-function ArrowDownIcon() {
-  return <ArrowUpRight size={16} />;
 }
 createRoot(document.getElementById("root")).render(<App />);

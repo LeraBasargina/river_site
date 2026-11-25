@@ -92,6 +92,11 @@
   color: #dae9d8;
   font-variant-numeric: tabular-nums;
 }
+.survey-map-content {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+}
 .survey-basemap {
   position: absolute;
   inset: 0;

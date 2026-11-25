@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ArrowUpRight, ClipboardList, FileDown, MapPin, Play, Video } from "lucide-react";
 import records from "./lib/survey-data.json";
 import basemap from "./lib/survey-basemap.json";
@@ -53,7 +53,18 @@ export const coordinates = ({ lat, lon }) => `${lat.toFixed(7)}, ${lon.toFixed(7
 export const confidence = (record) =>
   new Intl.NumberFormat("ru-RU", { style: "percent", maximumFractionDigits: 1 }).format(record.confidence);
 
-export function SurveyMap({ selectedId, onSelect, flight = null, selectedReachIds = [], onToggleReach }) {
+export function SurveyMap({
+  selectedId,
+  onSelect,
+  flight = null,
+  selectedReachIds = [],
+  onToggleReach,
+  zoom = 1,
+  showRecords = true,
+  showContext = true,
+}) {
+  const selected = records.find(({ id }) => id === selectedId);
+  const center = selected && position(selected);
   // Illustrative animation. The report has object coordinates only.
   const start = { lat: 46.7715, lon: 142.4985 };
   const drone = {
@@ -64,86 +75,117 @@ export function SurveyMap({ selectedId, onSelect, flight = null, selectedReachId
   return (
     <div className="survey-map" role="group" aria-label="Карта реки Лютоги и расчётных координат объектов обследования"
       style={{ aspectRatio: mapWidthMetres / mapHeightMetres }}>
-      <svg className="survey-basemap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-        {basemapLayers.map(({ layer, paths }) => (
-          <g key={layer} className={`survey-layer-${layer}`}>
-            {paths.map((path, index) => <path key={index} d={path} fillRule="evenodd" />)}
-          </g>
+      <div className="survey-map-content" style={zoom === 1 ? undefined : {
+        transform: `scale(${zoom})`,
+        transformOrigin: center ? `${center.left} ${center.top}` : "center",
+      }}>
+        <svg className="survey-basemap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          {basemapLayers.filter(({ layer }) => showContext || layer.startsWith("water")).map(({ layer, paths }) => (
+            <g key={layer} className={`survey-layer-${layer}`}>
+              {paths.map((path, index) => <path key={index} d={path} fillRule="evenodd" />)}
+            </g>
+          ))}
+        </svg>
+        {latitudes.map((lat) => (
+          <div aria-hidden="true" key={lat} className="survey-grid-lat" style={{ top: `${latitudeY(lat)}%` }}>
+            <span>{lat.toFixed(3)}° с. ш.</span>
+          </div>
         ))}
-      </svg>
-      {latitudes.map((lat) => (
-        <div aria-hidden="true" key={lat} className="survey-grid-lat" style={{ top: `${latitudeY(lat)}%` }}>
-          <span>{lat.toFixed(3)}° с. ш.</span>
-        </div>
-      ))}
-      {longitudes.map((lon) => (
-        <div aria-hidden="true" key={lon} className="survey-grid-lon" style={{ left: `${longitudeX(lon)}%` }}>
-          <span>{lon.toFixed(3)}°</span>
-        </div>
-      ))}
+        {longitudes.map((lon) => (
+          <div aria-hidden="true" key={lon} className="survey-grid-lon" style={{ left: `${longitudeX(lon)}%` }}>
+            <span>{lon.toFixed(3)}°</span>
+          </div>
+        ))}
+        {basemap.labels.filter(({ kind }) => showContext || kind === "river").map((label) => (
+          <span key={label.name} className={`survey-map-label survey-map-label-${label.kind}`}
+            style={position(label)} aria-hidden="true">
+            {label.name}
+          </span>
+        ))}
+        {showRecords && records.map((record) => {
+          const selected = record.id === selectedId;
+          const style = position(record);
+          const inPlan = onToggleReach && selectedReachIds.includes(reachForRecord(record.id).id);
+          const classes = `survey-pin${selected ? " is-selected" : ""}${inPlan ? " is-in-plan" : ""}`;
+          return onSelect ? (
+            <button key={record.id} type="button" className={classes} style={style}
+              onClick={() => onSelect(record.id)} aria-label={`Объект №${record.id}`}
+              aria-pressed={selected} title={`Объект №${record.id}`}>
+              {selected ? record.id : <span aria-hidden="true" />}
+            </button>
+          ) : (
+            <span key={record.id} className={classes} style={style} aria-hidden="true">
+              {selected ? record.id : <span />}
+            </span>
+          );
+        })}
+        {onToggleReach && planningReaches.map((reach) => (
+          <button key={reach.id} type="button" className="survey-reach-marker"
+            style={position(records.find(({ id }) => id === reach.markerId))}
+            aria-label={`Участок ${reach.id} на карте — ${reach.name}`}
+            aria-pressed={selectedReachIds.includes(reach.id)}
+            title={reach.name}
+            onClick={() => onToggleReach(reach.id)}>
+            {reach.id}
+          </button>
+        ))}
+        {flight !== null && (
+          <>
+            <svg className="survey-flight-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <line x1={position(start).left} y1={position(start).top}
+                x2={position(drone).left} y2={position(drone).top} />
+            </svg>
+            <div className="survey-drone" style={position(drone)} aria-hidden="true">
+              <span className="survey-drone-body" />
+              <span className="survey-rotor top-left" />
+              <span className="survey-rotor top-right" />
+              <span className="survey-rotor bottom-left" />
+              <span className="survey-rotor bottom-right" />
+            </div>
+          </>
+        )}
+      </div>
       <div aria-hidden="true" className="survey-north">↑ <span>С</span></div>
-      <div aria-hidden="true" className="survey-scale" style={{ width: `${(100 * 200) / mapWidthMetres}%` }}>200 м</div>
-      {basemap.labels.map((label) => (
-        <span key={label.name} className={`survey-map-label survey-map-label-${label.kind}`}
-          style={position(label)} aria-hidden="true">
-          {label.name}
-        </span>
-      ))}
+      <div aria-hidden="true" className="survey-scale" style={{ width: `${(100 * 200 * zoom) / mapWidthMetres}%` }}>200 м</div>
       <span className="survey-map-attribution">
         {onSelect
           ? <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">{basemap.attribution}</a>
           : "© OpenStreetMap"}
       </span>
-      {records.map((record) => {
-        const selected = record.id === selectedId;
-        const style = position(record);
-        const inPlan = onToggleReach && selectedReachIds.includes(reachForRecord(record.id).id);
-        const classes = `survey-pin${selected ? " is-selected" : ""}${inPlan ? " is-in-plan" : ""}`;
-        return onSelect ? (
-          <button key={record.id} type="button" className={classes} style={style}
-            onClick={() => onSelect(record.id)} aria-label={`Объект №${record.id}`}
-            aria-pressed={selected} title={`Объект №${record.id}`}>
-            {selected ? record.id : <span aria-hidden="true" />}
-          </button>
-        ) : (
-          <span key={record.id} className={classes} style={style} aria-hidden="true">
-            {selected ? record.id : <span />}
-          </span>
-        );
-      })}
-      {onToggleReach && planningReaches.map((reach) => (
-        <button key={reach.id} type="button" className="survey-reach-marker"
-          style={position(records.find(({ id }) => id === reach.markerId))}
-          aria-label={`Участок ${reach.id} на карте — ${reach.name}`}
-          aria-pressed={selectedReachIds.includes(reach.id)}
-          title={reach.name}
-          onClick={() => onToggleReach(reach.id)}>
-          {reach.id}
-        </button>
-      ))}
-      {flight !== null && (
-        <>
-          <svg className="survey-flight-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <line x1={position(start).left} y1={position(start).top}
-              x2={position(drone).left} y2={position(drone).top} />
-          </svg>
-          <div className="survey-drone" style={position(drone)} aria-hidden="true">
-            <span className="survey-drone-body" />
-            <span className="survey-rotor top-left" />
-            <span className="survey-rotor top-right" />
-            <span className="survey-rotor bottom-left" />
-            <span className="survey-rotor bottom-right" />
-          </div>
-        </>
-      )}
     </div>
   );
 }
 
-export default function Survey({ onShow, onPlan }) {
-  const [selectedId, setSelectedId] = useState(featuredRecord.id);
-  const selected = records.find(({ id }) => id === selectedId);
+export function SurveyObjectCard({ record: selected, onPlan }) {
   const reach = reachForRecord(selected.id);
+  return (
+    <article className="survey-card" aria-label="Карточка выбранного объекта">
+      <a className="survey-photo-link" href={surveyPhoto(selected)} target="_blank" rel="noreferrer"
+        aria-label={`Открыть кадр объекта №${selected.id} в новой вкладке`}>
+        <img src={surveyPhoto(selected)} alt={`Кадр из отчёта с разметкой объекта №${selected.id}`} />
+        <ArrowUpRight size={18} />
+      </a>
+      <div className="survey-card-copy" aria-live="polite">
+        <p className="survey-eyebrow">Объект №{selected.id}</p>
+        <h3>{selected.category}</h3>
+        <dl>
+          <div><dt>Время съёмки</dt><dd>{selected.time}</dd></div>
+          <div><dt>Координаты (расчёт)</dt><dd>{coordinates(selected)}</dd></div>
+          <div><dt>Уверенность модели</dt><dd>{confidence(selected)}</dd></div>
+          <div><dt>Участок планирования</dt><dd>{reach.id} · {reach.name}</dd></div>
+        </dl>
+        {onPlan && (
+          <button className="survey-add-to-plan" type="button" onClick={() => onPlan(reach.id)}>
+            <ClipboardList size={16} /> Участок {reach.id} в план
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+export default function Survey({ selectedId, onSelect, onShow, onPlan }) {
+  const selected = records.find(({ id }) => id === selectedId);
   return (
     <section id="survey" className="survey-section section" aria-labelledby="survey-title">
       <div className="section-heading survey-heading">
@@ -169,33 +211,14 @@ export default function Survey({ onShow, onPlan }) {
 
       <div className="survey-layout">
         <div id="survey-map-panel" className="survey-map-panel" tabIndex={-1}>
-          <SurveyMap selectedId={selectedId} onSelect={setSelectedId} />
+          <SurveyMap selectedId={selectedId} onSelect={onSelect} />
           <p className="survey-map-caption">
             <span><MapPin size={16} /> Расчётные координаты из отчёта</span>
             <span><i aria-hidden="true" /> Русло</span>
             <span><i className="survey-road-key" aria-hidden="true" /> Дороги</span>
           </p>
         </div>
-        <article className="survey-card" aria-label="Карточка выбранного объекта">
-          <a className="survey-photo-link" href={surveyPhoto(selected)} target="_blank" rel="noreferrer"
-            aria-label={`Открыть кадр объекта №${selected.id} в новой вкладке`}>
-            <img src={surveyPhoto(selected)} alt={`Кадр из отчёта с разметкой объекта №${selected.id}`} />
-            <ArrowUpRight size={18} />
-          </a>
-          <div className="survey-card-copy" aria-live="polite">
-            <p className="survey-eyebrow">Объект №{selected.id}</p>
-            <h3>{selected.category}</h3>
-            <dl>
-              <div><dt>Время съёмки</dt><dd>{selected.time}</dd></div>
-              <div><dt>Координаты (расчёт)</dt><dd>{coordinates(selected)}</dd></div>
-              <div><dt>Уверенность модели</dt><dd>{confidence(selected)}</dd></div>
-              <div><dt>Участок планирования</dt><dd>{reach.id} · {reach.name}</dd></div>
-            </dl>
-            <button className="survey-add-to-plan" type="button" onClick={() => onPlan(reach.id)}>
-              <ClipboardList size={16} /> Участок {reach.id} в план
-            </button>
-          </div>
-        </article>
+        <SurveyObjectCard record={selected} onPlan={onPlan} />
       </div>
       <p className="survey-note">Точки нанесены по расчётным координатам из отчёта. Их точность в отчёте не указана. Решение о расчистке принимается после оценки участка.</p>
 
@@ -205,11 +228,11 @@ export default function Survey({ onShow, onPlan }) {
           <thead><tr><th scope="col">ID</th><th scope="col">Класс объекта</th><th scope="col">Время съёмки</th><th scope="col">Координаты (расчёт)</th><th scope="col">Уверенность модели</th></tr></thead>
           <tbody>
             {records.map((record) => (
-              <tr key={record.id} className={record.id === selectedId ? "is-selected" : ""} onClick={() => setSelectedId(record.id)}>
+              <tr key={record.id} className={record.id === selectedId ? "is-selected" : ""} onClick={() => onSelect(record.id)}>
                 <th scope="row">
                   <button type="button" onClick={(event) => {
                     event.stopPropagation();
-                    setSelectedId(record.id);
+                    onSelect(record.id);
                   }} aria-label={`Показать объект №${record.id} на карте`} aria-pressed={record.id === selectedId}>
                     {record.id}
                   </button>

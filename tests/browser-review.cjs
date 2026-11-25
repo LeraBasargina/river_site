@@ -32,6 +32,35 @@ const fs = require("node:fs");
     )
   )
     throw Error("Bad theme restored");
+  const hero = p.locator(".hero-visual");
+  const demo = p.locator("#demo");
+  if (await hero.getByRole("button", { name: /Объект №/ }).count() !== 22)
+    throw Error("Homepage did not use the 22 report points");
+  await hero.getByRole("button", { name: "Объект №22", exact: true }).click();
+  await demo.getByAltText("Кадр из отчёта с разметкой объекта №22").waitFor();
+  await demo.getByLabel("Объект из отчёта").selectOption("7");
+  await p.locator("#survey").getByAltText("Кадр из отчёта с разметкой объекта №7").waitFor();
+  await demo.getByRole("button", { name: "Приблизить" }).click();
+  if (!(await demo.locator(".survey-map-content").getAttribute("style")).includes("scale(1.25)"))
+    throw Error("Zoom did not scale the report map");
+  await demo.getByRole("button", { name: "Сбросить масштаб" }).click();
+  await demo.getByRole("button", { name: "Дороги, здания и лес" }).click();
+  if (await demo.locator(".survey-layer-roads").count()) throw Error("Layer toggle did not hide roads");
+  await demo.getByRole("button", { name: "Дороги, здания и лес" }).click();
+  await demo.getByRole("button", { name: "Точки обследования" }).click();
+  if (await demo.locator(".survey-pin").count()) throw Error("Report markers did not hide");
+  await demo.getByRole("button", { name: "Точки обследования" }).click();
+  await demo.getByRole("tab", { name: "Съёмка" }).click();
+  if (await demo.locator(".survey-pin").count()) throw Error("Filming stage shows report markers before analysis");
+  await demo.getByRole("tab", { name: "Результат" }).click();
+  const [reportCsv] = await Promise.all([
+    p.waitForEvent("download"),
+    demo.getByRole("button", { name: "Скачать данные отчёта (CSV)" }).click(),
+  ]);
+  const csv = fs.readFileSync(await reportCsv.path(), "utf8").trim().split("\n");
+  if (csv.length !== 23 || !csv[1].includes("46.7722583;142.4938747;A") ||
+      !csv[22].includes("46.782232;142.4868631;C"))
+    throw Error("Demonstration CSV did not contain the report points");
   await p.getByLabel("Заметка к фрагменту").fill("Заметка участка A");
   const route = p.getByRole("group", { name: "Контрольные точки облёта" });
   await route.getByRole("button", { name: /Обзор излучины/ }).click();
