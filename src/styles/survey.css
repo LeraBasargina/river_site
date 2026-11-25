@@ -86,7 +86,6 @@
 .survey-map {
   position: relative;
   isolation: isolate;
-  aspect-ratio: .977;
   width: 100%;
   overflow: hidden;
   background: radial-gradient(ellipse at 78% 80%, #24463b, transparent 75%), #142924;
@@ -101,10 +100,52 @@
   pointer-events: none;
 }
 .survey-basemap path {
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.survey-layer-woods { fill: #315342; }
+.survey-layer-builtArea { fill: #303d34; }
+.survey-layer-buildings {
+  fill: #68756b;
+  stroke: #859187;
+  stroke-width: .35px;
+}
+.survey-layer-water {
   fill: #3c7589;
   stroke: #78afbe;
-  stroke-width: 1px;
-  vector-effect: non-scaling-stroke;
+  stroke-width: .9px;
+}
+.survey-layer-waterways {
+  fill: none;
+  stroke: #78afbe;
+  stroke-width: 1.4px;
+}
+.survey-layer-roads {
+  fill: none;
+  stroke: #b8ae86;
+  stroke-width: 1.3px;
+}
+.survey-layer-paths {
+  fill: none;
+  stroke: #91a094;
+  stroke-width: .9px;
+  stroke-dasharray: 3 2;
+}
+.survey-map-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  color: #e1eadc;
+  font-size: clamp(.6rem, 1.25vw, .9rem);
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px #101d19, 0 0 4px #101d19, 0 0 2px #101d19;
+  pointer-events: none;
+}
+.survey-map-label-river {
+  transform: translate(-56%, -90%) rotate(61deg);
+  color: #e1f7fa;
+  font-size: clamp(.6rem, 1.1vw, .78rem);
 }
 .survey-map-attribution {
   position: absolute;
@@ -211,6 +252,10 @@
   height: 8px;
   border-radius: 2px;
   background: #3c7589;
+}
+.survey-map-caption .survey-road-key {
+  height: 3px;
+  background: #aa9e71;
 }
 .survey-photo-link {
   position: relative;

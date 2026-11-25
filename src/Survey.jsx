@@ -20,13 +20,31 @@ function position({ lat, lon }) {
   };
 }
 
-const waterPaths = basemap.polygons.map((polygon) => polygon.map((ring) => {
-  const points = ring.map(([lon, lat]) => `${longitudeX(lon).toFixed(3)} ${latitudeY(lat).toFixed(3)}`);
-  return `M${points.join(" L")} Z`;
-}).join(" "));
+function mapPath(coordinates) {
+  const points = coordinates.map(([lon, lat]) =>
+    `${longitudeX(lon).toFixed(3)} ${latitudeY(lat).toFixed(3)}`
+  );
+  return `M${points.join(" L")}`;
+}
+
+const basemapLayers = [
+  ["woods", true],
+  ["builtArea", true],
+  ["waterways", false],
+  ["water", true],
+  ["buildings", true],
+  ["paths", false],
+  ["roads", false],
+].map(([layer, area]) => ({
+  layer,
+  paths: basemap.layers[layer].map((geometry) =>
+    area ? geometry.map((ring) => `${mapPath(ring)} Z`).join(" ") : mapPath(geometry)
+  ),
+}));
 
 const mapWidthMetres = (bounds.east - bounds.west) * 111320 *
   Math.cos((Math.PI * (bounds.north + bounds.south)) / 360);
+const mapHeightMetres = (bounds.north - bounds.south) * 111320;
 
 export const featuredRecord = records.find(({ id }) => id === 19);
 export const surveyPhoto = (record) => `/media/survey/${record.photo}`;
@@ -43,9 +61,14 @@ export function SurveyMap({ selectedId, onSelect, flight = null }) {
   };
 
   return (
-    <div className="survey-map" role="group" aria-label="Русло реки и расчётные координаты объектов обследования">
+    <div className="survey-map" role="group" aria-label="Карта реки Лютоги и расчётных координат объектов обследования"
+      style={{ aspectRatio: mapWidthMetres / mapHeightMetres }}>
       <svg className="survey-basemap" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-        {waterPaths.map((path) => <path key={path} d={path} fillRule="evenodd" />)}
+        {basemapLayers.map(({ layer, paths }) => (
+          <g key={layer} className={`survey-layer-${layer}`}>
+            {paths.map((path, index) => <path key={index} d={path} fillRule="evenodd" />)}
+          </g>
+        ))}
       </svg>
       {latitudes.map((lat) => (
         <div aria-hidden="true" key={lat} className="survey-grid-lat" style={{ top: `${latitudeY(lat)}%` }}>
@@ -59,6 +82,12 @@ export function SurveyMap({ selectedId, onSelect, flight = null }) {
       ))}
       <div aria-hidden="true" className="survey-north">↑ <span>С</span></div>
       <div aria-hidden="true" className="survey-scale" style={{ width: `${(100 * 200) / mapWidthMetres}%` }}>200 м</div>
+      {basemap.labels.map((label) => (
+        <span key={label.name} className={`survey-map-label survey-map-label-${label.kind}`}
+          style={position(label)} aria-hidden="true">
+          {label.name}
+        </span>
+      ))}
       <span className="survey-map-attribution">
         {onSelect
           ? <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">{basemap.attribution}</a>
@@ -130,7 +159,8 @@ export default function Survey({ onShow }) {
           <SurveyMap selectedId={selectedId} onSelect={setSelectedId} />
           <p className="survey-map-caption">
             <span><MapPin size={16} /> Расчётные координаты из отчёта</span>
-            <span><i aria-hidden="true" /> Русло реки</span>
+            <span><i aria-hidden="true" /> Русло</span>
+            <span><i className="survey-road-key" aria-hidden="true" /> Дороги</span>
           </p>
         </div>
         <article className="survey-card" aria-label="Карточка выбранного объекта">
@@ -150,7 +180,7 @@ export default function Survey({ onShow }) {
           </div>
         </article>
       </div>
-      <p className="survey-note">Точки нанесены по расчётным координатам из отчёта. Береговая линия на подложке обобщена. Решение о расчистке принимается после оценки участка.</p>
+      <p className="survey-note">Точки нанесены по расчётным координатам из отчёта. Их точность в отчёте не указана. Решение о расчистке принимается после оценки участка.</p>
 
       <div className="survey-table-scroll" tabIndex={0} role="region" aria-label="Таблица объектов обследования">
         <table className="survey-table">
