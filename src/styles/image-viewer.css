@@ -1,0 +1,43 @@
+.image-viewer {
+  width: min(1320px, calc(100% - 24px));
+  max-width: none;
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  padding: 0;
+  border: 1px solid #4c5a54;
+  border-radius: 12px;
+  background: #171f1c;
+  color: #f1f5f2;
+  box-shadow: 0 24px 90px #0009;
+}
+.image-viewer::backdrop {
+  background: #0d1513df;
+}
+.image-viewer-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px clamp(12px, 2vw, 22px);
+  border-bottom: 1px solid #4c5a54;
+  background: #171f1c;
+}
+.image-viewer-head h3 {
+  margin: 0;
+  font-size: clamp(.89rem, 1.5vw, 1.15rem);
+  line-height: 1.35;
+}
+.image-viewer-head button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid #71847b;
+  border-radius: 6px;
+  background: #25332d;
+  font-size: .82rem;
+}

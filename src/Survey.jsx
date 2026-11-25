@@ -1,9 +1,10 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import {
-  ArrowUpRight, Check, ClipboardList, FileDown, Layers, MapPin,
+  ArrowUpRight, Check, ClipboardList, FileDown, Layers, MapPin, Maximize2,
   Minus, Pause, Play, Plus, RotateCcw, Route, Video,
 } from "lucide-react";
 import Planner from "./Planner";
+import ImageViewer from "./ImageViewer";
 import { segmentationVideo } from "./lib/river-video";
 import records from "./lib/survey-data.json";
 import basemap from "./lib/survey-basemap.json";
@@ -170,13 +171,19 @@ function SurveyMap({
 
 function SurveyObjectCard({ record, onPlan, inPlan }) {
   const reach = reachForRecord(record.id);
+  const [photoOpen, setPhotoOpen] = useState(false);
+  const photo = surveyPhoto(record);
+  const photoDescription = `Кадр из отчёта с разметкой объекта №${record.id}`;
   return (
     <article className="survey-card" aria-label="Карточка выбранного объекта">
-      <a className="survey-photo-link" href={surveyPhoto(record)} target="_blank" rel="noreferrer"
-        aria-label={`Открыть кадр объекта №${record.id} в новой вкладке`}>
-        <img src={surveyPhoto(record)} alt={`Кадр из отчёта с разметкой объекта №${record.id}`} />
-        <ArrowUpRight size={18} />
-      </a>
+      <button type="button" className="survey-photo-preview" aria-haspopup="dialog"
+        aria-label={`Увеличить кадр объекта №${record.id}`} onClick={(event) => {
+          event.currentTarget.focus({ preventScroll: true });
+          setPhotoOpen(true);
+        }}>
+        <img src={photo} alt={photoDescription} width={1440} height={612} />
+        <span aria-hidden="true"><Maximize2 size={16} /> Увеличить</span>
+      </button>
       <div className="survey-card-copy" aria-live="polite">
         <p className="survey-eyebrow">Объект №{record.id}</p>
         <h3>{record.category}</h3>
@@ -191,6 +198,11 @@ function SurveyObjectCard({ record, onPlan, inPlan }) {
           {inPlan ? `Участок ${reach.id} в плане` : `Участок ${reach.id} в план`}
         </button>
       </div>
+      {photoOpen && (
+        <ImageViewer title={`Объект №${record.id} · кадр из отчёта`} onClose={() => setPhotoOpen(false)}>
+          <img src={photo} alt={photoDescription} className="survey-report-photo" width={1440} height={612} />
+        </ImageViewer>
+      )}
     </article>
   );
 }

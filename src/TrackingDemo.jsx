@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import {
   ScanLine,
   RotateCcw,
@@ -6,8 +6,8 @@ import {
   ArrowLeft,
   Check,
   Maximize2,
-  X,
 } from "lucide-react";
+import ImageViewer from "./ImageViewer";
 import { stamp } from "./lib/river-video";
 const frames = [
   { time: 0, x: 48.2, y: 49.4 },
@@ -33,26 +33,8 @@ const steps = [
   },
 ];
 function FrameDialog({ frame, onClose }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    ref.current.showModal();
-  }, []);
   return (
-    <dialog
-      ref={ref}
-      className="frame-dialog"
-      onCancel={(e) => {
-        e.preventDefault();
-        onClose();
-      }}
-      aria-label={"Кадр " + stamp(frame.time)}
-    >
-      <div className="frame-dialog-head">
-        <span>РЕАЛЬНЫЙ КАДР · {stamp(frame.time)}</span>
-        <button onClick={onClose} aria-label="Закрыть кадр">
-          <X size={20} />
-        </button>
-      </div>
+    <ImageViewer title={"Кадр " + stamp(frame.time)} onClose={onClose}>
       <div className="tracking-photo">
         <img
           src={framePhoto(frame)}
@@ -67,7 +49,7 @@ function FrameDialog({ frame, onClose }) {
         Рамка интерфейса указывает на выбранный ориентир. Зелёные маски уже
         присутствуют в исходной записи результатов обработки.
       </p>
-    </dialog>
+    </ImageViewer>
   );
 }
 export default function TrackingDemo() {
@@ -114,7 +96,11 @@ export default function TrackingDemo() {
             <button
               className="tracking-frame"
               key={f.time}
-              onClick={() => setFrame(f)}
+              aria-haspopup="dialog"
+              onClick={(event) => {
+                event.currentTarget.focus({ preventScroll: true });
+                setFrame(f);
+              }}
               aria-label={"Открыть кадр " + stamp(f.time)}
             >
               <div className="tracking-photo">

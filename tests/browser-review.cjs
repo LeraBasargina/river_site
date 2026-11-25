@@ -112,9 +112,13 @@ const fs = require("node:fs");
   await tracking.getByRole("tab", { name: /Связать между кадрами/ }).click();
   if ((await tracking.locator(".tracking-frames .track-focus").count()) !== 3)
     throw Error("Tracking highlights missing");
-  await tracking.getByRole("button", { name: "Открыть кадр 00:01" }).click();
-  await p.getByRole("dialog", { name: "Кадр 00:01" }).waitFor();
-  await p.keyboard.press("Escape");
+  const trackingFrame = tracking.getByRole("button", { name: "Открыть кадр 00:01" });
+  await trackingFrame.click();
+  const trackingViewer = p.getByRole("dialog", { name: "Кадр 00:01" });
+  await trackingViewer.getByRole("button", { name: "Закрыть" }).click();
+  await trackingViewer.waitFor({ state: "hidden" });
+  if (!(await trackingFrame.evaluate((button) => button === document.activeElement)))
+    throw Error("Closing a tracking frame did not return focus to its thumbnail");
   await tracking
     .getByRole("button", { name: "Следующий шаг", exact: true })
     .click();
@@ -140,7 +144,32 @@ const fs = require("node:fs");
   await surveyMap.locator(".survey-layer-roads path").first().waitFor();
   await surveyMap.locator(".survey-layer-buildings path").first().waitFor();
   await surveyMap.getByRole("button", { name: "Объект №22" }).click();
-  await p.locator("#survey .survey-photo-link").getByAltText("Кадр из отчёта с разметкой объекта №22").waitFor();
+  const reportPreview = stand.getByRole("button", { name: "Увеличить кадр объекта №22" });
+  const reportViewer = p.getByRole("dialog", { name: "Объект №22 · кадр из отчёта" });
+  const reportImage = "Кадр из отчёта с разметкой объекта №22";
+  const thumbnail = reportPreview.getByAltText(reportImage);
+  await thumbnail.waitFor();
+  if (!(await thumbnail.evaluate((image) => {
+    const { width, height } = image.getBoundingClientRect();
+    const style = getComputedStyle(image);
+    return Math.abs(width / height - 16 / 9) < 0.03 &&
+      style.objectFit === "cover" && ["0% 50%", "left center"].includes(style.objectPosition);
+  }))) throw Error("The survey preview did not frame the source image without borders");
+  await reportPreview.click();
+  const fullPhoto = reportViewer.getByAltText(reportImage);
+  await fullPhoto.waitFor();
+  if (await fullPhoto.getAttribute("src") !== await thumbnail.getAttribute("src"))
+    throw Error("The viewer opened a different report photo");
+  await reportViewer.getByRole("button", { name: "Закрыть" }).click();
+  await reportViewer.waitFor({ state: "hidden" });
+  if (!(await reportPreview.evaluate((button) => button === document.activeElement)))
+    throw Error("Closing the photo did not return focus to its thumbnail");
+  await reportPreview.press("Enter");
+  await reportViewer.waitFor();
+  await p.keyboard.press("Escape");
+  await reportViewer.waitFor({ state: "hidden" });
+  if (await surveyMap.getByRole("button", { name: "Объект №22", exact: true }).getAttribute("aria-pressed") !== "true")
+    throw Error("The selected map point changed after closing the photo");
   await p.locator("#survey").getByRole("button", { name: "Участок C в план" }).click();
   const planner = p.locator("#planner");
   const northern = planner.getByRole("button", { name: /Северо-западный участок/ }).filter({ hasText: "Северо-западный участок" });

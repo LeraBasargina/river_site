@@ -249,52 +249,18 @@
   opacity: 0.35;
   cursor: default;
 }
-.frame-dialog {
-  padding: 18px;
-  border: 1px solid #335066;
-  border-radius: 12px;
-  width: min(1150px, 95vw);
-  max-height: 92dvh;
-  overflow: auto;
-  background: #0b1523;
-  color: #d1e6f4;
-  box-shadow: 0 30px 100px #0008;
+.image-viewer > p {
+  margin: 0;
+  padding: 10px clamp(12px, 2vw, 22px);
+  color: #bac9c0;
+  font-size: .8rem;
+  line-height: 1.6;
 }
-.frame-dialog::backdrop {
-  background: #020a13d9;
-  backdrop-filter: blur(9px);
-}
-.frame-dialog-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 15px;
-  font: 9px monospace;
-  letter-spacing: 1px;
-}
-.frame-dialog-head button {
-  border: 1px solid #36546a;
-  border-radius: 5px;
-  background: none;
-  color: #c4dfef;
-  padding: 7px;
-  display: grid;
-  place-items: center;
-}
-.frame-dialog p {
-  font-size: 11px;
-  line-height: 1.8;
-  color: #9bb6c6;
-}
-.frame-dialog .track-focus:after {
+.image-viewer .track-focus:after {
   font-size: 8px;
   top: -20px;
 }
-.frame-dialog .tracking-photo {
-  border-radius: 6px;
-}
-.frame-dialog .track-focus {
+.image-viewer .track-focus {
   border-width: 2px;
 }
 [data-theme="dark"] .tracking-panel {
@@ -432,13 +398,7 @@
   .tracking-bottom button {
     font-size: 11px;
   }
-  .frame-dialog {
-    padding: 12px;
-  }
-  .frame-dialog p {
-    font-size: 10px;
-  }
-  .frame-dialog .track-focus:after {
+  .image-viewer .track-focus:after {
     font-size: 5px;
     top: -15px;
   }
