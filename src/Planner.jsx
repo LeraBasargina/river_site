@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PrintPlan from "./PrintPlan";
-import { PLAN_STORAGE_KEY, readPlan, removalObjects, validDate, TEAMS } from "./lib/plan-storage.js";
-import { ArrowUpRight, CalendarDays, Check, Download, Printer, X } from "lucide-react";
+import { readPlan, removalObjects, validDate, writePlan, TEAMS } from "./lib/plan-storage.js";
+import { ArrowUpRight, CalendarDays, Check, Download, Eraser, Printer, X } from "lucide-react";
 
 export default function Planner({ renderSurvey }) {
   const [printOpen, setPrintOpen] = useState(false);
@@ -20,6 +20,7 @@ export default function Planner({ renderSurvey }) {
   const chosen = removalObjects(decisions);
   const verifiedCount = Object.values(decisions).filter(({ decision }) => decision !== "pending").length;
   const canExport = chosen.length > 0 && validDate(date);
+  const canClear = Object.keys(decisions).length > 0 || date !== "" || team !== TEAMS[0];
   const plan = { chosen, date, team };
 
   function change(fn) {
@@ -48,11 +49,26 @@ export default function Planner({ renderSurvey }) {
   function submit(event) {
     event.preventDefault();
     try {
-      localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify({ decisions, date, team }));
+      writePlan(localStorage, { decisions, date, team });
       setSaved(true);
       setMessage("Решения и план сохранены в этом браузере.");
     } catch {
       setMessage("Браузер не разрешил сохранение. Если есть объекты в плане, укажите дату и скачайте файл.");
+    }
+  }
+
+  function clear() {
+    if (!window.confirm("Очистить план? Решения по объектам, заметки, дата и выбор бригады будут сброшены.")) return;
+    const empty = { decisions: {}, date: "", team: TEAMS[0] };
+    setDecisions(empty.decisions);
+    setDate(empty.date);
+    setTeam(empty.team);
+    setSaved(false);
+    try {
+      writePlan(localStorage, empty);
+      setMessage("План очищен. Можно выбрать объекты на карте заново.");
+    } catch {
+      setMessage("План на странице очищен. Браузер не обновил сохранённую копию.");
     }
   }
 
@@ -133,6 +149,9 @@ export default function Planner({ renderSurvey }) {
             </button>
             <button type="button" className="download-plan" disabled={!canExport} onClick={download}>
               <Download size={14} /> Скачать план JSON
+            </button>
+            <button type="button" className="clear-plan" disabled={!canClear} onClick={clear}>
+              <Eraser size={16} /> Очистить план
             </button>
             <p className="plan-feedback" role="status">{message}</p>
             <small className="planner-hint">

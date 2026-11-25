@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { PLAN_STORAGE_KEY, readPlan, normalizePlan, validDate, removalObjects } from "../src/lib/plan-storage.js";
+import { PLAN_STORAGE_KEY, readPlan, normalizePlan, validDate, removalObjects, writePlan, TEAMS } from "../src/lib/plan-storage.js";
 import { planningReaches, reachForRecord } from "../src/lib/survey-reaches.js";
 test("invalid and inaccessible local storage do not break startup", () => {
   for (const raw of ["{", "null", "42", "[]", '"bad"'])
@@ -80,4 +80,20 @@ test("planning sections cover every report point exactly once", () => {
   const records = JSON.parse(readFileSync(new URL("../src/lib/survey-data.json", import.meta.url), "utf8"));
   assert.deepEqual(planningReaches.flatMap(({ recordIds }) => recordIds), records.map(({ id }) => id));
   for (const reach of planningReaches) assert.equal(reachForRecord(reach.markerId), reach);
+});
+
+test("saving an empty removal plan prevents old decisions or logistics from returning", () => {
+  const previousKey = "river-field-plan:lyutoga-2025-07-02";
+  const previousValue = JSON.stringify({ date: "2026-12-01", team: TEAMS[1] });
+  const values = new Map([
+    [previousKey, previousValue],
+    [PLAN_STORAGE_KEY, JSON.stringify({ date: "2026-12-02", team: TEAMS[1], decisions: { 22: { decision: "remove", note: "Берег" } } })],
+    ["river-theme", "dark"],
+  ]);
+  const storage = { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
+  const empty = { decisions: {}, date: "", team: TEAMS[0] };
+  writePlan(storage, empty);
+  assert.deepEqual(readPlan(storage), empty);
+  assert.equal(values.get(previousKey), previousValue);
+  assert.equal(values.get("river-theme"), "dark");
 });

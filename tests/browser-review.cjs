@@ -261,6 +261,21 @@ const fs = require("node:fs");
   await show.waitFor({ state: "detached" });
   if (await p.locator("#survey-footage[open]").count()) throw Error("Autoplay did not restore footage disclosure");
   if (await plannedObjects.count() !== 2) throw Error("Autoplay changed the user's plan");
+  const clearPlan = planner.getByRole("button", { name: "Очистить план" });
+  p.once("dialog", (dialog) => dialog.dismiss());
+  await clearPlan.click();
+  if (await plannedObjects.count() !== 2) throw Error("Canceling plan clearing changed saved decisions");
+  p.once("dialog", (dialog) => dialog.accept());
+  await clearPlan.click();
+  await planner.getByRole("status").filter({ hasText: "План очищен" }).waitFor();
+  await p.reload();
+  if (await plannedObjects.count() || await planner.getByLabel("Дата выезда").inputValue())
+    throw Error("The cleared plan returned after reload");
+  if (await surveyMap.locator(".survey-pin").count() !== 22 ||
+      await surveyMap.locator(".survey-pin.is-in-plan,.survey-pin.is-kept").count())
+    throw Error("Clearing the plan must preserve the report while resetting all decisions");
+  await addObject.click();
+  await plannedObjects.filter({ hasText: "Объект №19" }).waitFor();
   const broken = await p.evaluate(() =>
     [...document.querySelectorAll('a[href^="#"]')]
       .map((a) => a.getAttribute("href"))

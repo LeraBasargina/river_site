@@ -55,6 +55,10 @@ export function readPlan(storage) {
   }
 }
 
+export function writePlan(storage, plan) {
+  storage.setItem(PLAN_STORAGE_KEY, JSON.stringify(plan));
+}
+
 export function removalObjects(decisions) {
   return records.filter(({ id }) => decisions[id]?.decision === "remove")
     .map(({ id, lat, lon, category }) => {
