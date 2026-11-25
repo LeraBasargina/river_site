@@ -205,6 +205,33 @@
   border-bottom: 2px solid currentColor;
   font-size: .7rem;
 }
+.survey-flight-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.survey-demo-trail {
+  fill: none;
+  stroke: #bdeaff;
+  stroke-width: 2px;
+  stroke-dasharray: 5 5;
+  vector-effect: non-scaling-stroke;
+}
+.survey-demo-drone {
+  fill: #e6f7ff;
+  stroke: #e6f7ff;
+  stroke-width: .25;
+}
+.survey-demo-drone .survey-demo-camera {
+  fill: #9cdfff38;
+  stroke: #b3e9ff;
+  stroke-width: .14;
+}
+.survey-demo-drone .survey-demo-drone-badge {
+  fill: #173b4c;
+}
 .survey-pin {
   position: absolute;
   z-index: 1;
@@ -237,6 +264,14 @@
   box-shadow: 0 0 0 5px #dcef9e38, 0 0 24px #dcef9e60;
   font: 800 12px ui-monospace, monospace;
   pointer-events: none;
+}
+.survey-pin.is-on-bank span {
+  border-color: #fff2d1;
+  background: #f0b872;
+}
+.survey-pin.is-on-bank.is-selected {
+  background: #ffdcac;
+  box-shadow: 0 0 0 5px #ffdcac38, 0 0 24px #ffdcac60;
 }
 .survey-pin.is-in-plan span {
   border-color: #edf8cc;

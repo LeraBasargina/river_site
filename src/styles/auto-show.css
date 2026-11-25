@@ -155,13 +155,6 @@
   object-fit: cover;
   object-position: left center;
 }
-.survey-flight-line {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
 .survey-flight-line line {
   stroke: #d9eea9;
   stroke-width: 2px;

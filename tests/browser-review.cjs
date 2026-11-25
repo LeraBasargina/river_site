@@ -50,8 +50,30 @@ const fs = require("node:fs");
   await demo.getByRole("button", { name: "Точки обследования" }).click();
   if (await demo.locator(".survey-pin").count()) throw Error("Report markers did not hide");
   await demo.getByRole("button", { name: "Точки обследования" }).click();
+  if ((await demo.locator(".survey-pin.is-on-bank").count()) !== 3)
+    throw Error("Report markers did not distinguish bank and water detections");
   await demo.getByRole("tab", { name: "Съёмка" }).click();
   if (await demo.locator(".survey-pin").count()) throw Error("Filming stage shows report markers before analysis");
+  const demoFlight = demo.locator(".survey-demo-flight");
+  const demoDrone = demoFlight.locator(".survey-demo-drone");
+  const initialPosition = await demoDrone.evaluate((drone) => drone.getCTM().e);
+  await p.waitForFunction((x) =>
+    Math.abs(document.querySelector("#demo .survey-demo-drone").getCTM().e - x) > 1,
+    initialPosition
+  );
+  await demo.getByRole("button", { name: "Пауза пролёта" }).click();
+  if (!(await demoFlight.evaluate((map) => map.animationsPaused())))
+    throw Error("Drone flight did not pause");
+  await demo.getByRole("button", { name: "Продолжить пролёт" }).click();
+  if (await demoFlight.evaluate((map) => map.animationsPaused()))
+    throw Error("Drone flight did not resume");
+  await demo.getByRole("button", { name: "Повторить пролёт с начала" }).click();
+  if (await demoFlight.evaluate((map) => map.getCurrentTime()) > 0.5)
+    throw Error("Drone flight did not restart");
+  await demo.getByRole("button", { name: "Маршрут БПЛА" }).click();
+  if (await demoFlight.count()) throw Error("Flight toggle did not hide the route");
+  await demo.getByRole("button", { name: "Маршрут БПЛА" }).click();
+  await demoFlight.waitFor();
   await demo.getByRole("tab", { name: "Результат" }).click();
   const [reportCsv] = await Promise.all([
     p.waitForEvent("download"),

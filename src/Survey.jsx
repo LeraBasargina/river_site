@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { ArrowUpRight, ClipboardList, FileDown, MapPin, Play, Video } from "lucide-react";
 import records from "./lib/survey-data.json";
 import basemap from "./lib/survey-basemap.json";
@@ -53,6 +53,38 @@ export const coordinates = ({ lat, lon }) => `${lat.toFixed(7)}, ${lon.toFixed(7
 export const confidence = (record) =>
   new Intl.NumberFormat("ru-RU", { style: "percent", maximumFractionDigits: 1 }).format(record.confidence);
 
+// The first exported waterway is the Lyutoga centreline. Keep both ends
+// of the illustrative flight inset so the drone stays in the map frame.
+const demoFlightPath = mapPath(basemap.layers.waterways[0].slice(3, -3));
+
+export function SurveyDemoFlight({ playing, run }) {
+  const overlay = useRef(null);
+  useLayoutEffect(() => {
+    overlay.current.setCurrentTime(0);
+  }, [run]);
+  useLayoutEffect(() => {
+    if (playing) overlay.current.unpauseAnimations();
+    else overlay.current.pauseAnimations();
+  }, [playing]);
+
+  return (
+    <svg ref={overlay} className="survey-flight-line survey-demo-flight"
+      viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path className="survey-demo-trail" d={demoFlightPath} />
+      <g className="survey-demo-drone">
+        <animateMotion path={demoFlightPath} dur="18s" repeatCount="indefinite" />
+        <circle className="survey-demo-camera" r="5.4" />
+        <circle className="survey-demo-drone-badge" r="2.85" />
+        <path d="M-1.35 -1.35L1.35 1.35M1.35 -1.35L-1.35 1.35" />
+        <circle cx="-1.35" cy="-1.35" r=".66" />
+        <circle cx="1.35" cy="-1.35" r=".66" />
+        <circle cx="-1.35" cy="1.35" r=".66" />
+        <circle cx="1.35" cy="1.35" r=".66" />
+      </g>
+    </svg>
+  );
+}
+
 export function SurveyMap({
   selectedId,
   onSelect,
@@ -62,6 +94,8 @@ export function SurveyMap({
   zoom = 1,
   showRecords = true,
   showContext = true,
+  showRecordCategories = false,
+  children,
 }) {
   const selected = records.find(({ id }) => id === selectedId);
   const center = selected && position(selected);
@@ -102,11 +136,13 @@ export function SurveyMap({
             {label.name}
           </span>
         ))}
+        {children}
         {showRecords && records.map((record) => {
           const selected = record.id === selectedId;
           const style = position(record);
           const inPlan = onToggleReach && selectedReachIds.includes(reachForRecord(record.id).id);
-          const classes = `survey-pin${selected ? " is-selected" : ""}${inPlan ? " is-in-plan" : ""}`;
+          const onBank = showRecordCategories && record.category === "Древесный завал на берегу/отмели";
+          const classes = `survey-pin${selected ? " is-selected" : ""}${inPlan ? " is-in-plan" : ""}${onBank ? " is-on-bank" : ""}`;
           return onSelect ? (
             <button key={record.id} type="button" className={classes} style={style}
               onClick={() => onSelect(record.id)} aria-label={`Объект №${record.id}`}

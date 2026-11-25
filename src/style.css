@@ -239,6 +239,44 @@ h2 span {
   opacity: .46;
   cursor: default;
 }
+.demo-map-controls .demo-flight-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: auto;
+  padding-inline: 9px;
+  font-size: .8rem;
+}
+.demo-map-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  color: #e3f0e4;
+  font-size: .76rem;
+}
+.demo-map-key:empty {
+  display: none;
+}
+.demo-map-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.demo-map-key i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #accc7d;
+}
+.demo-map-key .demo-key-bank {
+  background: #f0b872;
+}
+.demo-map-key .demo-key-flight {
+  width: 15px;
+  height: 0;
+  border-top: 2px dashed #bdeaff;
+  border-radius: 0;
+}
 .demo-body .survey-card {
   overflow: hidden;
   border: 1px solid var(--survey-border);

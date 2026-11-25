@@ -5,6 +5,8 @@ import {
   ArrowRight,
   Waves,
   Play,
+  Pause,
+  Route,
   ScanLine,
   MapPin,
   Layers,
@@ -29,7 +31,7 @@ import "./styles/tracking-demo.css";
 
 import Planner from "./Planner";
 import Mission from "./Mission";
-import Survey, { featuredRecord, SurveyMap, SurveyObjectCard } from "./Survey";
+import Survey, { featuredRecord, SurveyDemoFlight, SurveyMap, SurveyObjectCard } from "./Survey";
 import AutoShow from "./AutoShow";
 import TrackingDemo from "./TrackingDemo";
 import records from "./lib/survey-data.json";
@@ -95,6 +97,9 @@ function App() {
     [zoomIndex, setZoomIndex] = useState(0),
     [showContext, setShowContext] = useState(true),
     [showRecords, setShowRecords] = useState(true),
+    [showFlight, setShowFlight] = useState(true),
+    [flightPlaying, setFlightPlaying] = useState(() => !matchMedia("(prefers-reduced-motion: reduce)").matches),
+    [flightRun, setFlightRun] = useState(0),
     [menu, setMenu] = useState(false),
     [faq, setFaq] = useState(null);
   const item = records.find(({ id }) => id === selectedId);
@@ -296,7 +301,7 @@ function App() {
               <span>одного наблюдения.</span>
             </h2>
             <p>
-              Переключайте этапы и выбирайте объекты на карте.
+              Наблюдайте за пролётом, переключайте этапы и выбирайте объекты на карте.
               <br />
               Так видео становится понятной историей реки.
             </p>
@@ -324,7 +329,9 @@ function App() {
               <div className="demo-map-panel">
                 <SurveyMap selectedId={selectedId} onSelect={setSelectedId}
                   zoom={mapZoomLevels[zoomIndex]} showContext={showContext}
-                  showRecords={stage > 0 && showRecords} />
+                  showRecords={stage > 0 && showRecords} showRecordCategories>
+                  {showFlight && <SurveyDemoFlight playing={flightPlaying} run={flightRun} />}
+                </SurveyMap>
                 <div className="demo-map-controls" role="group" aria-label="Управление картой">
                   <button type="button" aria-label="Приблизить" title="Приблизить"
                     disabled={zoomIndex === mapZoomLevels.length - 1}
@@ -339,6 +346,31 @@ function App() {
                   {stage > 0 && (
                     <button type="button" aria-label="Точки обследования" title="Точки обследования"
                       aria-pressed={showRecords} onClick={() => setShowRecords(!showRecords)}><MapPin size={17} /></button>
+                  )}
+                  <button type="button" className="demo-flight-toggle" aria-pressed={showFlight}
+                    onClick={() => setShowFlight(!showFlight)}><Route size={17} /> Маршрут БПЛА</button>
+                  {showFlight && (
+                    <>
+                      <button type="button" aria-label={flightPlaying ? "Пауза пролёта" : "Продолжить пролёт"}
+                        title={flightPlaying ? "Пауза пролёта" : "Продолжить пролёт"}
+                        onClick={() => setFlightPlaying(!flightPlaying)}>
+                        {flightPlaying ? <Pause size={17} /> : <Play size={17} />}
+                      </button>
+                      <button type="button" aria-label="Повторить пролёт с начала" title="Повторить пролёт с начала"
+                        onClick={() => {
+                          setFlightRun((run) => run + 1);
+                          setFlightPlaying(true);
+                        }}><RotateCcw size={17} /></button>
+                    </>
+                  )}
+                </div>
+                <div className="demo-map-key" aria-label="Обозначения карты">
+                  {showFlight && <span><i className="demo-key-flight" aria-hidden="true" /> Условная траектория БПЛА</span>}
+                  {stage > 0 && showRecords && (
+                    <>
+                      <span><i aria-hidden="true" /> Завал в воде</span>
+                      <span><i className="demo-key-bank" aria-hidden="true" /> Завал на берегу или отмели</span>
+                    </>
                   )}
                 </div>
               </div>
