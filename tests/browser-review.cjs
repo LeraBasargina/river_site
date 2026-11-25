@@ -185,6 +185,18 @@ const fs = require("node:fs");
   await planner.getByRole("button", { name: "План сохранён" }).waitFor();
   if (await planner.getByRole("button", { name: "Скачать план JSON" }).isEnabled())
     throw Error("Export was enabled without a date");
+  const paper = p.getByRole("dialog", { name: "План устранения завалов" });
+  await planner.getByRole("button", { name: "Печатный план / PDF" }).click();
+  await paper.getByText("Не назначена", { exact: true }).waitFor();
+  const [pdf] = await Promise.all([
+    p.waitForEvent("download"),
+    paper.getByRole("link", { name: "Скачать PDF" }).click(),
+  ]);
+  if (pdf.suggestedFilename() !== "RIVER_removal_plan.pdf" ||
+      !fs.readFileSync(await pdf.path()).subarray(0, 5).equals(Buffer.from("%PDF-")))
+    throw Error("The planner did not download a PDF file");
+  await p.keyboard.press("Escape");
+  await paper.waitFor({ state: "hidden" });
   await p.reload();
   await plannedObjects.filter({ hasText: "Объект №22" }).waitFor();
   await stand.getByRole("button", { name: "Оставить", exact: true }).waitFor();
@@ -202,11 +214,28 @@ const fs = require("node:fs");
   await planner.getByRole("button", { name: "Сохранить план" }).click();
   await planner.getByRole("button", { name: "План сохранён" }).waitFor();
   await planner.getByRole("button", { name: "Печатный план / PDF" }).click();
-  const paper = p.getByRole("dialog", { name: "План устранения завалов" });
   await paper.getByRole("heading", { name: /Объект №22/ }).waitFor();
   await paper.getByText("Проверить доступ к берегу").waitFor();
   if (await paper.getByRole("heading", { name: /Объект №19/ }).count())
     throw Error("An object marked keep appeared in the printed plan");
+  await p.evaluate(() => {
+    const original = window.open;
+    window.open = () => {
+      window.open = original;
+      const doc = document.implementation.createHTMLDocument("");
+      return {
+        document: doc,
+        focus() {},
+        print() { window.printedPlan = doc.body.textContent; },
+      };
+    };
+  });
+  await paper.getByRole("button", { name: "Печать", exact: true }).click();
+  await p.waitForFunction(() =>
+    window.printedPlan?.includes("Объект №22") &&
+    window.printedPlan.includes("01.12.2026") &&
+    !window.printedPlan.includes("Объект №19")
+  );
   await p.keyboard.press("Escape");
   const [download] = await Promise.all([
     p.waitForEvent("download"),

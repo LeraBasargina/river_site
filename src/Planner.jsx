@@ -19,7 +19,8 @@ export default function Planner({ renderSurvey }) {
   const [message, setMessage] = useState("");
   const chosen = removalObjects(decisions);
   const verifiedCount = Object.values(decisions).filter(({ decision }) => decision !== "pending").length;
-  const canExport = chosen.length > 0 && validDate(date);
+  const canPrint = chosen.length > 0;
+  const canExport = canPrint && validDate(date);
   const canClear = Object.keys(decisions).length > 0 || date !== "" || team !== TEAMS[0];
   const plan = { chosen, date, team };
 
@@ -144,7 +145,10 @@ export default function Planner({ renderSurvey }) {
             <button type="submit" className="button primary">
               {saved ? <><Check size={16} /> План сохранён</> : <>Сохранить план <ArrowUpRight size={16} /></>}
             </button>
-            <button type="button" className="print-plan-button" disabled={!canExport} onClick={() => setPrintOpen(true)}>
+            <button type="button" className="print-plan-button" disabled={!canPrint} onClick={(event) => {
+              event.currentTarget.focus({ preventScroll: true });
+              setPrintOpen(true);
+            }}>
               <Printer size={16} /> Печатный план / PDF
             </button>
             <button type="button" className="download-plan" disabled={!canExport} onClick={download}>
@@ -155,7 +159,7 @@ export default function Planner({ renderSurvey }) {
             </button>
             <p className="plan-feedback" role="status">{message}</p>
             <small className="planner-hint">
-              Решения можно сохранить без даты. Для печати или скачивания добавьте объект в план и укажите дату выезда.
+              Для печати и PDF добавьте объект в план. Для JSON также укажите дату выезда.
             </small>
           </form>
         </div>
