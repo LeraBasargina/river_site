@@ -1,15 +1,12 @@
 .mission-expand-bar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 15px;
   margin-bottom: 25px;
 }
-.mission-expand-bar > span {
-  font: 7px monospace;
-  letter-spacing: 1px;
-  color: #7892a1;
-}
+.mission-expand-bar > .section-kicker { margin: 0; }
 .expand-mission {
   display: flex;
   align-items: center;
@@ -45,7 +42,6 @@
   padding: 16px 0;
   border-bottom: 1px solid var(--line);
 }
-.mission-expanded > .section-kicker,
 .mission-expanded > .section-heading,
 .mission-expanded > .project-status {
   display: none;
@@ -91,19 +87,15 @@
   opacity: 0.4;
   cursor: default;
 }
-.print-plan-dialog {
-  width: min(900px, 95vw);
-  max-height: 92dvh;
-  padding: 0;
+.print-plan-preview {
+  max-width: 900px;
+  margin: 24px auto 0;
   border: 1px solid #c7d3d9;
   border-radius: 12px;
   background: #e8eff3;
   color: #183c4b;
-  box-shadow: 0 30px 100px #0005;
-}
-.print-plan-dialog::backdrop {
-  background: #020c18b8;
-  backdrop-filter: blur(8px);
+  color-scheme: light;
+  overflow: clip;
 }
 .print-toolbar {
   display: flex;
@@ -138,20 +130,7 @@
   color: #214858;
   font-size: .85rem;
 }
-[data-theme="dark"] .print-plan-dialog {
-  color-scheme: light;
-}
-.print-plan-dialog input,
-.print-plan-dialog button {
-  color-scheme: light;
-}
 @media (max-width: 700px) {
-  .mission-expand-bar > span {
-    display: none;
-  }
-  .mission-expand-bar {
-    justify-content: flex-end;
-  }
   .expand-mission {
     font-size: 10px;
   }

@@ -101,18 +101,9 @@ const fs = require("node:fs");
   if (csv.length !== 23 || !csv[1].includes("46.7722583;142.4938747;A") ||
       !csv[22].includes("46.782232;142.4868631;C"))
     throw Error("Demonstration CSV did not contain the report points");
-  await p.getByLabel("Заметка к фрагменту").fill("Заметка участка A");
   const route = p.getByRole("group", { name: "Контрольные точки облёта" });
-  await route.getByRole("button", { name: /Обзор излучины/ }).click();
-  if (await p.getByLabel("Заметка к фрагменту").inputValue())
-    throw Error("Note leaked A to B");
-  await p.getByLabel("Заметка к фрагменту").fill("Заметка участка B");
-  await route.getByRole("button", { name: /Начало облёта/ }).click();
-  if (
-    (await p.getByLabel("Заметка к фрагменту").inputValue()) !==
-    "Заметка участка A"
-  )
-    throw Error("Draft A lost");
+  if (await p.locator("#video .mission-side").locator("select, textarea").count())
+    throw Error("Observation status and fragment notes are still visible in the video walkthrough");
   if (await p.locator(".spotter-panel,.spotter-gallery").count())
     throw Error("Removed photo exercise still present");
   const tracking = p.locator("#tracking-demo");
@@ -201,7 +192,7 @@ const fs = require("node:fs");
   await planner.getByRole("button", { name: "План сохранён" }).waitFor();
   if (await planner.getByRole("button", { name: "Скачать план JSON" }).isEnabled())
     throw Error("Export was enabled without a date");
-  const paper = p.getByRole("dialog", { name: "План устранения завалов" });
+  const paper = planner.getByRole("region", { name: "Предпросмотр печатного плана" });
   await planner.getByRole("button", { name: "Печатный план / PDF" }).click();
   await paper.getByText("Не назначена", { exact: true }).waitFor();
   const [pdf] = await Promise.all([
@@ -211,7 +202,7 @@ const fs = require("node:fs");
   if (pdf.suggestedFilename() !== "RIVER_removal_plan.pdf" ||
       !fs.readFileSync(await pdf.path()).subarray(0, 5).equals(Buffer.from("%PDF-")))
     throw Error("The planner did not download a PDF file");
-  await p.keyboard.press("Escape");
+  await paper.press("Escape");
   await paper.waitFor({ state: "hidden" });
   await p.reload();
   await plannedObjects.filter({ hasText: "Объект №22" }).waitFor();
@@ -235,15 +226,8 @@ const fs = require("node:fs");
   if (await paper.getByRole("heading", { name: /Объект №19/ }).count())
     throw Error("An object marked keep appeared in the printed plan");
   await p.evaluate(() => {
-    const original = window.open;
-    window.open = () => {
-      window.open = original;
-      const doc = document.implementation.createHTMLDocument("");
-      return {
-        document: doc,
-        focus() {},
-        print() { window.printedPlan = doc.body.textContent; },
-      };
+    window.print = () => {
+      window.printedPlan = document.querySelector("body.has-print-plan > .print-plan-output")?.textContent;
     };
   });
   await paper.getByRole("button", { name: "Печать", exact: true }).click();
@@ -252,7 +236,12 @@ const fs = require("node:fs");
     window.printedPlan.includes("01.12.2026") &&
     !window.printedPlan.includes("Объект №19")
   );
-  await p.keyboard.press("Escape");
+  await p.emulateMedia({ media: "print" });
+  await p.locator("body > .print-plan-output").getByText(/Объект №22/).waitFor();
+  await p.locator("#root").waitFor({ state: "hidden" });
+  await p.emulateMedia({ media: "screen" });
+  await paper.press("Escape");
+  await paper.waitFor({ state: "hidden" });
   const [download] = await Promise.all([
     p.waitForEvent("download"),
     planner.getByRole("button", { name: "Скачать план JSON" }).click(),
@@ -346,7 +335,7 @@ const fs = require("node:fs");
   }
   if (errors.length) throw Error(errors.join(";"));
   console.log(
-    "PASS: stored data, independent drafts, report-to-plan selection/print/JSON, autoplay, links, images, responsive layouts, no JS errors",
+    "PASS: stored data, report-to-plan selection/print/JSON, autoplay, links, images, responsive layouts, no JS errors",
   );
   await b.close();
 })().catch((e) => {

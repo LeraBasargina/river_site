@@ -133,12 +133,24 @@
     gap: 17px 12px;
   }
 }
-@page {
-  size: A4;
-  margin: 15mm;
-}
+.print-plan-output { display: none; }
+
 @media print {
-  .plan-paper {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  body.has-print-plan {
+    margin: 0;
+    background: white;
+  }
+  body.has-print-plan > :not(.print-plan-output) {
+    display: none !important;
+  }
+  body.has-print-plan > .print-plan-output {
+    display: block;
+  }
+  .print-plan-output .plan-paper {
     padding: 0;
     margin: 0;
   }
@@ -151,8 +163,5 @@
   .plan-paper h2,
   .plan-paper h3 {
     break-after: avoid;
-  }
-  .print-standalone-toolbar {
-    display: none !important;
   }
 }

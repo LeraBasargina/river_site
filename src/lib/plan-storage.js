@@ -5,11 +5,6 @@ export const PLAN_STORAGE_KEY = "river-removal-plan:lyutoga-2025-07-02";
 const legacyKeys = ["river-field-plan:lyutoga-2025-07-02", "river-field-plan"];
 
 export const TEAMS = ["Бригада № 1", "Бригада № 2", "Исследовательская группа"];
-export const STATUSES = [
-  "Требует осмотра",
-  "Наблюдать в динамике",
-  "Передать специалисту",
-];
 export const DECISION_LABELS = {
   pending: "На проверке",
   remove: "В плане устранения",

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import PrintPlan from "./PrintPlan";
 import { readPlan, removalObjects, validDate, writePlan, TEAMS } from "./lib/plan-storage.js";
 import { ArrowUpRight, CalendarDays, Check, Download, Eraser, Printer, X } from "lucide-react";
 
 export default function Planner({ renderSurvey }) {
-  const [printOpen, setPrintOpen] = useState(false);
+  const [printPlan, setPrintPlan] = useState(null);
+  const printButton = useRef(null);
   const [initial] = useState(() => {
     try {
       return readPlan(localStorage);
@@ -22,10 +23,15 @@ export default function Planner({ renderSurvey }) {
   const canPrint = chosen.length > 0;
   const canExport = canPrint && validDate(date);
   const canClear = Object.keys(decisions).length > 0 || date !== "" || team !== TEAMS[0];
-  const plan = { chosen, date, team };
+
+  function closePrintPlan() {
+    setPrintPlan(null);
+    printButton.current.focus();
+  }
 
   function change(fn) {
     fn();
+    setPrintPlan(null);
     setSaved(false);
     setMessage("");
   }
@@ -64,6 +70,7 @@ export default function Planner({ renderSurvey }) {
     setDecisions(empty.decisions);
     setDate(empty.date);
     setTeam(empty.team);
+    setPrintPlan(null);
     setSaved(false);
     try {
       writePlan(localStorage, empty);
@@ -92,7 +99,6 @@ export default function Planner({ renderSurvey }) {
 
   return (
     <>
-      {printOpen && <PrintPlan plan={plan} onClose={() => setPrintOpen(false)} />}
       {renderSurvey({ decisions, decide })}
       <section id="planner" className="planner survey-planner" aria-labelledby="planner-title">
         <div className="survey-planner-heading">
@@ -145,10 +151,11 @@ export default function Planner({ renderSurvey }) {
             <button type="submit" className="button primary">
               {saved ? <><Check size={16} /> План сохранён</> : <>Сохранить план <ArrowUpRight size={16} /></>}
             </button>
-            <button type="button" className="print-plan-button" disabled={!canPrint} onClick={(event) => {
-              event.currentTarget.focus({ preventScroll: true });
-              setPrintOpen(true);
-            }}>
+            <button ref={printButton} type="button" className="print-plan-button" disabled={!canPrint}
+              aria-expanded={Boolean(printPlan)} aria-controls={printPlan ? "print-plan-preview" : undefined} onClick={() => {
+                if (printPlan) closePrintPlan();
+                else setPrintPlan({ chosen, date, team });
+              }}>
               <Printer size={16} /> Печатный план / PDF
             </button>
             <button type="button" className="download-plan" disabled={!canExport} onClick={download}>
@@ -163,6 +170,7 @@ export default function Planner({ renderSurvey }) {
             </small>
           </form>
         </div>
+        {printPlan && <PrintPlan plan={printPlan} onClose={closePrintPlan} />}
       </section>
     </>
   );

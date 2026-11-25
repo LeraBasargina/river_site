@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { PLAN_STORAGE_KEY, readPlan, normalizePlan, validDate, removalObjects, writePlan, TEAMS } from "../src/lib/plan-storage.js";
 import { planningReaches, reachForRecord } from "../src/lib/survey-reaches.js";
+import { createPlanPdf, makePlanDocument } from "../src/lib/plan-document.js";
 test("invalid and inaccessible local storage do not break startup", () => {
   for (const raw of ["{", "null", "42", "[]", '"bad"'])
     assert.equal(readPlan({ getItem: () => raw }), null);
@@ -96,4 +97,16 @@ test("saving an empty removal plan prevents old decisions or logistics from retu
   assert.deepEqual(readPlan(storage), empty);
   assert.equal(values.get(previousKey), previousValue);
   assert.equal(values.get("river-theme"), "dark");
+});
+
+test("generating a PDF leaves the print preview data unchanged", async () => {
+  const plan = makePlanDocument({
+    chosen: removalObjects({ 22: { decision: "remove", note: "Проверить доступ к берегу" } }),
+    date: "",
+    team: TEAMS[0],
+  });
+  const before = structuredClone(plan);
+  const content = await createPlanPdf(plan).getBuffer();
+  assert.equal(content.subarray(0, 5).toString(), "%PDF-");
+  assert.deepEqual(plan, before);
 });

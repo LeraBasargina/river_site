@@ -60,7 +60,7 @@ export function createPlanPdf(plan) {
         ],
       })),
       { text: "Перед выездом", style: "heading", headlineLevel: 1 },
-      { ul: plan.checklist, margin: [0, 0, 0, 12] },
+      { ul: [...plan.checklist], margin: [0, 0, 0, 12] },
       { text: plan.footer, style: "caption" },
     ],
   });

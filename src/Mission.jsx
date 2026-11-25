@@ -1,4 +1,3 @@
-import { STATUSES } from "./lib/plan-storage.js";
 import { segmentationVideo, stamp } from "./lib/river-video";
 import React, { useRef, useState, useEffect } from "react";
 import {
@@ -55,7 +54,6 @@ export default function Mission() {
     [time, setTime] = useState(0),
     [duration, setDuration] = useState(modes.segmentation.duration),
     [playing, setPlaying] = useState(false),
-    [drafts, setDrafts] = useState({}),
     [error, setError] = useState("");
   const video = useRef(null),
     target = useRef(0);
@@ -66,14 +64,6 @@ export default function Mission() {
     photo: `/media/checkpoint-${mode}-${point.photoKey}.jpg`,
   }));
   const point = checkpoints[index];
-  const note = drafts[point.id]?.note || "";
-  const status = drafts[point.id]?.status || "Требует осмотра";
-  function setNote(note) {
-    setDrafts((d) => ({ ...d, [point.id]: { ...d[point.id], note } }));
-  }
-  function setStatus(status) {
-    setDrafts((d) => ({ ...d, [point.id]: { ...d[point.id], status } }));
-  }
   useEffect(() => {
     if (!expanded) return;
     const previous = document.activeElement;
@@ -165,11 +155,9 @@ export default function Mission() {
       aria-label={expanded ? "Демонстрация обследования" : undefined}
     >
       <div className="mission-expand-bar">
-        <span>
-          {expanded
-            ? "ДЕМОНСТРАЦИЯ ОБСЛЕДОВАНИЯ · ESC — ВЫХОД"
-            : "ПРОСТРАНСТВО ДЛЯ ПРЕЗЕНТАЦИИ"}
-        </span>
+        <div className="section-kicker">
+          {expanded ? "ДЕМОНСТРАЦИЯ ОБСЛЕДОВАНИЯ · ESC — ВЫХОД" : "ОДНО ОБСЛЕДОВАНИЕ / ОТ КАДРА К ПЛАНУ"}
+        </div>
         <button
           className="expand-mission"
           aria-expanded={expanded}
@@ -179,7 +167,6 @@ export default function Mission() {
           {expanded ? "Свернуть демонстрацию" : "Развернуть демонстрацию"}
         </button>
       </div>
-      <div className="section-kicker">ОДНО ОБСЛЕДОВАНИЕ / ОТ КАДРА К ПЛАНУ</div>
       <div className="section-heading">
         <h2>
           Увидеть своими глазами.
@@ -417,10 +404,6 @@ export default function Mission() {
                   <small>Геопривязка кадра</small>
                   <b>Не предоставлена</b>
                 </span>
-                <span>
-                  <small>Статус</small>
-                  <b>{status}</b>
-                </span>
               </div>
               <p className="mission-footnote">
                 Пример паспорта наблюдения. Координаты и расстояния не
@@ -463,35 +446,10 @@ export default function Mission() {
             ))}
           </div>
           <p className="checkpoint-description">{point.text}</p>
-          <label className="field-label">
-            Статус наблюдения
-            <select
-              aria-label="Статус наблюдения"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              {STATUSES.map((value) => (
-                <option key={value}>{value}</option>
-              ))}
-            </select>
-          </label>
-          <label className="field-label">
-            Заметка к фрагменту
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Что заметили в кадре?"
-              maxLength="600"
-              rows="3"
-            />
-          </label>
           <button className="button primary" onClick={openSurvey}>
             <MapPin size={16} /> К карте обследования{" "}
             <ArrowUpRight size={16} />
           </button>
-          <small className="mission-footnote">
-            На карте можно проверить завал и добавить объект в план устранения.
-          </small>
         </aside>
       </div>
       <div className="project-status">
@@ -511,8 +469,8 @@ export default function Mission() {
           </span>
           <h3>Координация полевых работ</h3>
           <p>
-            Статусы, заметки и план выезда на этом сайте демонстрируют возможный
-            рабочий процесс. Интеграции с бригадами пока нет.
+            Учебный план выезда показывает, как передать бригаде сведения
+            о проверенных объектах.
           </p>
         </article>
       </div>
